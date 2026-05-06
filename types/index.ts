@@ -396,6 +396,10 @@ export interface PlayerWeekSummary {
   prsHistory: number[];
   trend: number;
   bestMetric: string;
+  rankScore: number;
+  rankThreshold: number;
+  meetsThreshold: boolean;
+  totalSessionsThisWeek: number;
   readinessLabel: "match_ready" | "monitor" | "rest";
   injuryFlagged: boolean;
   sessionCount: number;

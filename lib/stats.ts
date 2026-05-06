@@ -1238,9 +1238,16 @@ export function calcKPIProgress(
 // ─────────────────────────────────────────────────────────────────
 
 export function calcPlayerWeekSummaries(
-  sessions: TrainingSession[],
+  sessions: TrainingSession[], // ← pre-filtered to the desired window (e.g. last 7 days)
   players: Player[],
 ): PlayerWeekSummary[] {
+  const totalSessionsThisWeek = sessions.length;
+  if (!totalSessionsThisWeek) return [];
+
+  // A player must attend ≥ 75% of the week's sessions to be eligible to rank.
+  // ceil ensures fractional results always round up (e.g. 5 sessions → need 4, not 3.75).
+  const rankThreshold = Math.ceil(totalSessionsThisWeek * 0.75);
+
   const playerMap = Object.fromEntries(players.map((p) => [String(p._id), p]));
 
   const summaryMap: Record<
@@ -1249,21 +1256,46 @@ export function calcPlayerWeekSummaries(
       prsHistory: number[];
       injuryFlagged: boolean;
       sessionCount: number;
+      // Accumulate all five metrics across every session so bestMetric
+      // reflects the player's true weekly average — not one random session.
+      metricSums: {
+        workRate: number;
+        technicalQuality: number;
+        tacticalAwareness: number;
+        focusLevel: number;
+        coachability: number;
+      };
     }
   > = {};
 
   sessions.forEach((session) => {
     session.playerLogs.forEach((log) => {
       const pid = String(log.playerId);
-      if (!summaryMap[pid])
+
+      if (!summaryMap[pid]) {
         summaryMap[pid] = {
           prsHistory: [],
           injuryFlagged: false,
           sessionCount: 0,
+          metricSums: {
+            workRate: 0,
+            technicalQuality: 0,
+            tacticalAwareness: 0,
+            focusLevel: 0,
+            coachability: 0,
+          },
         };
+      }
+
       summaryMap[pid].prsHistory.push(log.prs);
       summaryMap[pid].sessionCount++;
       if (log.injuryFlag) summaryMap[pid].injuryFlagged = true;
+
+      summaryMap[pid].metricSums.workRate += log.workRate;
+      summaryMap[pid].metricSums.technicalQuality += log.technicalQuality;
+      summaryMap[pid].metricSums.tacticalAwareness += log.tacticalAwareness;
+      summaryMap[pid].metricSums.focusLevel += log.focusLevel;
+      summaryMap[pid].metricSums.coachability += log.coachability;
     });
   });
 
@@ -1273,36 +1305,53 @@ export function calcPlayerWeekSummaries(
       if (!player) return null;
 
       const avgPRS = avg(data.prsHistory);
-      const recent = data.prsHistory.slice(-3);
-      const previous = data.prsHistory.slice(-6, -3);
+      const meetsThreshold = data.sessionCount >= rankThreshold;
+
+      // rankScore: attendance-penalised composite.
+      // A player with 5/5 sessions at PRS 0.84 outranks a player with 2/5 at 0.93.
+      // Players below the threshold receive 0 so they never appear in the ranked list.
+      const rankScore = meetsThreshold
+        ? parseFloat(
+            (avgPRS * (data.sessionCount / totalSessionsThisWeek)).toFixed(3),
+          )
+        : 0;
+
+      // Trend: first half of the week vs second half.
+      // Works cleanly at any session count (2 → 5 typical for a week).
+      const mid = Math.floor(data.prsHistory.length / 2);
+      const recent = data.prsHistory.slice(mid);
+      const earlier = data.prsHistory.slice(0, mid);
       const trend = parseFloat(
-        (avg(recent) - (previous.length ? avg(previous) : avgPRS)).toFixed(3),
+        (avg(recent) - (earlier.length ? avg(earlier) : avgPRS)).toFixed(3),
       );
 
-      const lastLog = sessions[sessions.length - 1]?.playerLogs.find(
-        (l) => String(l.playerId) === pid,
-      );
-      let bestMetric = "Consistency";
-      if (lastLog) {
-        const metrics = [
-          { label: "Work Rate", val: lastLog.workRate },
-          { label: "Technical", val: lastLog.technicalQuality },
-          { label: "Tactical", val: lastLog.tacticalAwareness },
-          { label: "Focus", val: lastLog.focusLevel },
-          { label: "Coachability", val: lastLog.coachability },
-        ];
-        bestMetric = metrics.sort((a, b) => b.val - a.val)[0].label;
-      }
+      // Best metric: true weekly average per metric, not a single-session snapshot.
+      const n = data.sessionCount;
+      const metrics = [
+        { label: "Work Rate", val: data.metricSums.workRate / n },
+        { label: "Technical", val: data.metricSums.technicalQuality / n },
+        { label: "Tactical", val: data.metricSums.tacticalAwareness / n },
+        { label: "Focus", val: data.metricSums.focusLevel / n },
+        { label: "Coachability", val: data.metricSums.coachability / n },
+      ];
+      const bestMetric = metrics.sort((a, b) => b.val - a.val)[0].label;
 
       return {
         player,
         avgPRS: parseFloat(avgPRS.toFixed(3)),
-        prsHistory: data.prsHistory.slice(-5),
+        // prsHistory is already week-scoped: sessions were pre-filtered by the caller.
+        // No more slice(-5) of an all-time array.
+        prsHistory: data.prsHistory,
         trend,
         bestMetric,
         readinessLabel: prsLabel(avgPRS),
         injuryFlagged: data.injuryFlagged,
         sessionCount: data.sessionCount,
+        // New fields — remember to add to PlayerWeekSummary in @/types
+        totalSessionsThisWeek,
+        rankThreshold,
+        meetsThreshold,
+        rankScore,
       } as PlayerWeekSummary;
     })
     .filter(Boolean) as PlayerWeekSummary[];
