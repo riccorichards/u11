@@ -95,12 +95,13 @@ async function getData() {
   const [matches, players, allSessions] = await Promise.all([
     MatchModel.find({}).sort({ date: 1 }).lean(),
     PlayerModel.find({}).sort({ number: 1 }).lean(),
-    TrainingSessionModel.find({}).sort({ date: 1 }).limit(20).lean(),
+    TrainingSessionModel.find({}).sort({ date: -1 }).limit(20).lean(),
   ]);
 
   const typedMatches = matches as unknown as Match[];
   const typedPlayers = players as unknown as Player[];
-  const typedSessions = allSessions as unknown as TrainingSession[];
+  // reverse() so chronological order is preserved for trend charts
+  const typedSessions = (allSessions as unknown as TrainingSession[]).reverse();
 
   // ── OSI map from cached match.osi fields ──────────────────────
   const osiMap: Record<string, number> = {};

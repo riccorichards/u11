@@ -1,4 +1,18 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/admin/recompute-all/route": "app/api/admin/recompute-all/route.js",
+  "/admin/page": "app/admin/page.js",
+  "/api/kpi/route": "app/api/kpi/route.js",
+  "/api/attributes/route": "app/api/attributes/route.js",
+  "/api/opponents/route": "app/api/opponents/route.js",
+  "/api/matches/route": "app/api/matches/route.js",
+  "/api/rankings/route": "app/api/rankings/route.js",
+  "/api/players/route": "app/api/players/route.js",
+  "/api/players/[id]/route": "app/api/players/[id]/route.js",
+  "/api/training/route": "app/api/training/route.js",
+  "/api/team/route": "app/api/team/route.js",
+  "/icon.png/route": "app/icon.png/route.js",
+  "/tactics/page": "app/tactics/page.js",
   "/page": "app/page.js",
-  "/icon.png/route": "app/icon.png/route.js"
+  "/players/[id]/page": "app/players/[id]/page.js"
 }

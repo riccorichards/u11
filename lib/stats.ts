@@ -1298,7 +1298,7 @@ export function calcPlayerWeekSummaries(
       summaryMap[pid].metricSums.coachability += log.coachability;
     });
   });
-
+  
   return Object.entries(summaryMap)
     .map(([pid, data]) => {
       const player = playerMap[pid];
