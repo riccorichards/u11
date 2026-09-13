@@ -1,6 +1,22 @@
 {
-  "/page": "app/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/admin/recompute-all/route": "app/api/admin/recompute-all/route.js",
+  "/api/kpi/route": "app/api/kpi/route.js",
+  "/api/attributes/route": "app/api/attributes/route.js",
+  "/api/matches/route": "app/api/matches/route.js",
+  "/api/players/[id]/regenerate-code/route": "app/api/players/[id]/regenerate-code/route.js",
+  "/api/opponents/route": "app/api/opponents/route.js",
+  "/api/players/[id]/route": "app/api/players/[id]/route.js",
+  "/api/players/claim-invite/route": "app/api/players/claim-invite/route.js",
+  "/api/upload/route": "app/api/upload/route.js",
+  "/api/players/route": "app/api/players/route.js",
+  "/api/training/route": "app/api/training/route.js",
   "/login/page": "app/login/page.js",
+  "/icon.png/route": "app/icon.png/route.js",
+  "/page": "app/page.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/tactics/page": "app/tactics/page.js",
   "/admin/login/page": "app/admin/login/page.js",
+  "/admin/page": "app/admin/page.js",
   "/admin/players/page": "app/admin/players/page.js"
 }
