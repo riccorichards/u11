@@ -1,151 +1,189 @@
 "use client";
 import { useState } from "react";
-import { X, UserPlus, Loader2 } from "lucide-react";
-
-interface Props {
-  onClose: () => void;
-  onSuccess: () => void;
-  adminPassword: string;
-}
+import { PlayerAvatar } from "./PlayerAvatar";
 
 const POSITIONS = ["GK", "DEF", "MID", "FWD"] as const;
 
 export default function CreatePlayerModal({
   onClose,
-  onSuccess,
-  adminPassword,
-}: Props) {
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated: () => void;
+}) {
   const [form, setForm] = useState({
     name: "",
     surname: "",
     number: "",
     position: "MID" as (typeof POSITIONS)[number],
-    avatarKey: "",
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [createdCode, setCreatedCode] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  const handleSubmit = async () => {
-    if (!form.name || !form.surname || !form.number || !form.position) {
-      setError("Please fill all required fields.");
+  function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+
+    let avatarUrl: string | null = null;
+
+    if (photoFile) {
+      const uploadForm = new FormData();
+      uploadForm.append("file", photoFile);
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: uploadForm,
+      });
+      if (!uploadRes.ok) {
+        setSaving(false);
+        setError("Photo upload failed");
+        return;
+      }
+      avatarUrl = (await uploadRes.json()).url;
+    }
+
+    const res = await fetch("/api/players", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...form, number: Number(form.number), avatarUrl }),
+    });
+
+    setSaving(false);
+    if (!res.ok) {
+      setError("Failed to create player");
       return;
     }
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/players", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          number: parseInt(form.number),
-          avatarKey: form.avatarKey || `player_${form.number}`,
-          adminPassword,
-        }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to create player");
-      }
-      onSuccess();
-      onClose();
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  };
+
+    const player = await res.json();
+    setCreatedCode(player.inviteCode);
+    onCreated();
+  }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-pitch/80 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="relative glass-bright rounded-2xl w-full max-w-md p-6 shadow-2xl border border-ocean/20">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-ocean/20 flex items-center justify-center">
-              <UserPlus size={17} className="text-ocean" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/70 backdrop-blur-sm px-6">
+      <div className="w-full max-w-sm rounded-xl border border-sky/10 bg-[#041B3A] p-6 shadow-2xl">
+        {createdCode ? (
+          <div className="text-center">
+            <PlayerAvatar
+              name={form.name}
+              surname={form.surname}
+              avatarUrl={photoPreview}
+              size={56}
+            />
+            <h2 className="mt-4 font-display text-2xl font-bold text-mist">
+              Player added
+            </h2>
+            <p className="mt-1 font-body text-sm text-sky/70">
+              Send this code to the parent — they'll enter it to sign in.
+            </p>
+            <div className="mt-4 rounded-lg bg-white/5 py-4 font-mono text-2xl font-bold tracking-[0.3em] text-mist">
+              {createdCode}
             </div>
-            <div>
-              <h2 className="font-display text-xl font-bold text-white uppercase tracking-wide">
-                Add Player
-              </h2>
-              <p className="text-xs text-sky/50 font-body">
-                Create new squad member
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg glass flex items-center justify-center text-sky/50 hover:text-white transition-colors"
-          >
-            <X size={15} />
-          </button>
-        </div>
-
-        {/* Form */}
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-mono text-sky/60 uppercase tracking-wider mb-1.5 block">
-                First Name *
-              </label>
-              <input
-                type="text"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Giorgi"
-                className="w-full glass rounded-xl px-3 py-2.5 text-sm text-white placeholder-sky/30 font-body outline-none focus:border-ocean border border-sky/10 transition-colors bg-transparent"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-mono text-sky/60 uppercase tracking-wider mb-1.5 block">
-                Surname *
-              </label>
-              <input
-                type="text"
-                value={form.surname}
-                onChange={(e) => setForm({ ...form, surname: e.target.value })}
-                placeholder="Beridze"
-                className="w-full glass rounded-xl px-3 py-2.5 text-sm text-white placeholder-sky/30 font-body outline-none focus:border-ocean border border-sky/10 transition-colors bg-transparent"
-              />
+            <div className="mt-4 flex justify-center gap-2">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(createdCode);
+                  setCopied(true);
+                }}
+                className="rounded-md border border-sky/20 px-4 py-2 font-body text-sm text-mist transition hover:border-ocean"
+              >
+                {copied ? "Copied" : "Copy code"}
+              </button>
+              <button
+                onClick={onClose}
+                className="rounded-md bg-ocean px-4 py-2 font-body text-sm font-medium text-white"
+              >
+                Done
+              </button>
             </div>
           </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="flex items-center gap-3">
+              <label className="cursor-pointer">
+                <PlayerAvatar
+                  name={form.name}
+                  surname={form.surname}
+                  avatarUrl={photoPreview}
+                  size={52}
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoSelect}
+                  className="hidden"
+                />
+              </label>
+              <div>
+                <h2 className="font-display text-2xl font-bold text-mist">
+                  Add Player
+                </h2>
+                <p className="font-body text-xs text-sky/60">
+                  Tap the avatar to add a photo
+                </p>
+              </div>
+            </div>
 
-          <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="font-body text-xs text-sky">First name</label>
+                <input
+                  required
+                  autoFocus
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  className="mt-1 w-full border-0 border-b border-sky/25 bg-transparent pb-2 font-body text-mist outline-none focus:border-ocean"
+                />
+              </div>
+              <div>
+                <label className="font-body text-xs text-sky">Surname</label>
+                <input
+                  required
+                  value={form.surname}
+                  onChange={(e) =>
+                    setForm({ ...form, surname: e.target.value })
+                  }
+                  className="mt-1 w-full border-0 border-b border-sky/25 bg-transparent pb-2 font-body text-mist outline-none focus:border-ocean"
+                />
+              </div>
+            </div>
+
             <div>
-              <label className="text-xs font-mono text-sky/60 uppercase tracking-wider mb-1.5 block">
-                Jersey # *
+              <label className="font-body text-xs text-sky">
+                Jersey number
               </label>
               <input
+                required
                 type="number"
                 value={form.number}
                 onChange={(e) => setForm({ ...form, number: e.target.value })}
-                placeholder="7"
-                min="1"
-                max="99"
-                className="w-full glass rounded-xl px-3 py-2.5 text-sm text-white placeholder-sky/30 font-mono outline-none focus:border-ocean border border-sky/10 transition-colors bg-transparent"
+                className="mt-1 w-full border-0 border-b border-sky/25 bg-transparent pb-2 font-body text-mist outline-none focus:border-ocean"
               />
             </div>
+
             <div>
-              <label className="text-xs font-mono text-sky/60 uppercase tracking-wider mb-1.5 block">
-                Position *
-              </label>
-              <div className="grid grid-cols-2 gap-1.5">
+              <label className="font-body text-xs text-sky">Position</label>
+              <div className="mt-2 grid grid-cols-4 gap-2">
                 {POSITIONS.map((pos) => (
                   <button
+                    type="button"
                     key={pos}
                     onClick={() => setForm({ ...form, position: pos })}
-                    className={`py-2 rounded-lg text-xs font-mono font-bold transition-all ${
+                    className={`rounded-md border py-2 font-body text-sm transition ${
                       form.position === pos
-                        ? `pos-${pos} scale-105`
-                        : "glass text-sky/40 hover:text-sky/70"
+                        ? "border-ocean bg-ocean/20 text-mist"
+                        : "border-sky/15 text-sky/60 hover:border-sky/40"
                     }`}
                   >
                     {pos}
@@ -153,46 +191,27 @@ export default function CreatePlayerModal({
                 ))}
               </div>
             </div>
-          </div>
 
-          <div>
-            <label className="text-xs font-mono text-sky/60 uppercase tracking-wider mb-1.5 block">
-              Avatar Key
-            </label>
-            <input
-              type="text"
-              value={form.avatarKey}
-              onChange={(e) => setForm({ ...form, avatarKey: e.target.value })}
-              placeholder={`player_${form.number || "7"} (auto if empty)`}
-              className="w-full glass rounded-xl px-3 py-2.5 text-sm text-white placeholder-sky/30 font-mono outline-none focus:border-ocean border border-sky/10 transition-colors bg-transparent"
-            />
-            <p className="text-xs text-sky/30 font-body mt-1">
-              Maps to{" "}
-              <code className="font-mono">
-                /public/assets/players/[key].png
-              </code>
-            </p>
-          </div>
+            {error && <p className="font-body text-sm text-red-400">{error}</p>}
 
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2 text-xs text-red-400 font-body">
-              {error}
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-md px-4 py-2 font-body text-sm text-sky/70 hover:text-mist"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="rounded-md bg-ocean px-4 py-2 font-body text-sm font-medium text-white transition hover:bg-[#0299d1] disabled:opacity-60"
+              >
+                {saving ? "Creating…" : "Create"}
+              </button>
             </div>
-          )}
-
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="w-full bg-ocean hover:bg-ocean/80 disabled:opacity-50 disabled:cursor-not-allowed text-white font-display font-bold uppercase tracking-widest py-3 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
-          >
-            {loading ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <UserPlus size={16} />
-            )}
-            {loading ? "Creating..." : "Add to Squad"}
-          </button>
-        </div>
+          </form>
+        )}
       </div>
     </div>
   );
