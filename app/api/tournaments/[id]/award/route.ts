@@ -43,7 +43,7 @@ export async function POST(
     let awardedCount = 0;
     let skippedCount = 0;
 
-    for (const playerId of playerIds) {
+    for (const playerId of Array.from(playerIds)) {
       const existing = await PlayerBadge.findOne({ playerId, badgeId });
       if (existing) {
         skippedCount++;
