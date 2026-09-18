@@ -23,9 +23,29 @@ const PlayerSessionLogSchema = new Schema(
       enum: ["match_ready", "monitor", "rest"],
       default: "monitor",
     },
-    // v1 = legacy absolute formula, v2 = expectation-relative (pillar + template)
-    // Stored per-log so calcDevelopmentArc can filter by version accurately.
     formulaVersion: { type: Number, default: 1 },
+  },
+  { _id: false },
+);
+
+// A theme note for the whole session, optionally tied to one of the
+// six fixed grading metrics so it can be filtered/trended against later.
+const KeyAccentSchema = new Schema(
+  {
+    text: { type: String, required: true },
+    linkedMetric: {
+      type: String,
+      enum: [
+        "workRate",
+        "technicalQuality",
+        "tacticalAwareness",
+        "focusLevel",
+        "bodyLanguage",
+        "coachability",
+        null,
+      ],
+      default: null,
+    },
   },
   { _id: false },
 );
@@ -51,11 +71,10 @@ const TrainingSessionSchema = new Schema(
     fatigue: { type: Number, min: 1, max: 10, required: true },
     coachRating: { type: Number, min: 1, max: 10, required: true },
     notes: { type: String, default: "" },
+    keyAccents: { type: [KeyAccentSchema], default: [] },
     teamTC: { type: Number, default: 0 },
     teamMS: { type: Number, default: 0 },
-    // Session-level formula version — used by calcRollingTeamCondition to avoid
-    // blending v1 and v2 TC/MS values in the rolling average.
-    // Old sessions without this field are treated as v1 via the default.
+    teamworkRating: { type: Number, min: 1, max: 10, default: null },
     formulaVersion: { type: Number, default: 1 },
     playerLogs: [PlayerSessionLogSchema],
   },

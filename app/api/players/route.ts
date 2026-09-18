@@ -3,13 +3,51 @@ import connectDB from "@/lib/mongodb";
 import PlayerModel from "@/lib/models/Player";
 import UserModel from "@/lib/models/User";
 import { generateUniqueInviteCode } from "@/lib/generateInviteCode";
+import { auth } from "@/auth";
 
 export async function GET() {
   try {
     await connectDB();
+    const session = await auth();
+    const isAdmin = session?.user?.role === "COACH_ADMIN";
+
     const players = await PlayerModel.find({}).sort({ number: 1 }).lean();
-    return NextResponse.json(players); // inviteCodeClaimed field tells the admin everything needed
-  } catch (error) {
+
+    const linkedUsers = isAdmin
+      ? await UserModel.find({ linkedPlayerId: { $ne: null } })
+          .select("email linkedPlayerId")
+          .lean()
+      : [];
+    const linkMap = new Map(
+      linkedUsers.map((u) => [u.linkedPlayerId?.toString(), u.email]),
+    );
+
+    const result = players.map((p) => {
+      const base = {
+        _id: p._id,
+        name: p.name,
+        surname: p.surname,
+        number: p.number,
+        position: p.position,
+        avatarUrl: p.avatarUrl,
+        currentXp: p.currentXp,
+        level: p.level,
+        currentStreak: p.currentStreak,
+      };
+      // Invite codes and parent contact info are coach-only, never public.
+      if (isAdmin) {
+        return {
+          ...base,
+          inviteCode: p.inviteCode,
+          inviteCodeClaimed: p.inviteCodeClaimed,
+          parentEmail: linkMap.get(String(p._id)) ?? null,
+        };
+      }
+      return base;
+    });
+
+    return NextResponse.json(result);
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch players" },
       { status: 500 },

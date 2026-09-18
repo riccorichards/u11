@@ -4,6 +4,7 @@ import PlayerKPIModel from "@/lib/models/PlayerKPI";
 import PlayerModel from "@/lib/models/Player";
 import PlayerAttributeModel from "@/lib/models/PlayerAttribute";
 import TrainingSessionModel from "@/lib/models/TrainingSession";
+import { CURRENT_SEASON, getSeasonWeeks } from "@/lib/season";
 import MatchModel from "@/lib/models/Match";
 import {
   calcKPIProgress,
@@ -23,24 +24,6 @@ async function getDisciplineLogModel() {
   } catch {
     return null;
   }
-}
-
-const CURRENT_SEASON = "2025/26";
-
-// How many weeks are in the season and how many have elapsed
-// based on a fixed season start date. Adjust seasonStart to match yours.
-function getSeasonWeeks(): { total: number; elapsed: number } {
-  const seasonStart = new Date("2025-09-01");
-  const seasonEnd = new Date("2026-05-31");
-  const now = new Date();
-  const totalMs = seasonEnd.getTime() - seasonStart.getTime();
-  const elapsedMs = Math.max(0, now.getTime() - seasonStart.getTime());
-  const total = Math.round(totalMs / (7 * 24 * 60 * 60 * 1000));
-  const elapsed = Math.min(
-    total,
-    Math.round(elapsedMs / (7 * 24 * 60 * 60 * 1000)),
-  );
-  return { total, elapsed };
 }
 
 // ─── GET — fetch KPI targets + live progress for a player ─────────
@@ -171,10 +154,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    if (body.adminPassword !== process.env.ADMIN_PASSWORD) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     if (!body.playerId) {
       return NextResponse.json({ error: "playerId required" }, { status: 400 });
     }
@@ -224,10 +203,6 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-
-    if (body.adminPassword !== process.env.ADMIN_PASSWORD) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     if (!body.playerId) {
       return NextResponse.json({ error: "playerId required" }, { status: 400 });

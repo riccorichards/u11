@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { PlayerAvatar } from "@/components/admin/PlayerAvatar";
 import CreatePlayerModal from "@/components/admin/CreatePlayerModal";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 type PlayerRow = {
   _id: string;
@@ -27,6 +29,8 @@ export default function AdminPlayersPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const router = useRouter();
+
   async function fetchPlayers() {
     setLoading(true);
     const res = await fetch("/api/players");
@@ -40,6 +44,12 @@ export default function AdminPlayersPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-12">
+      <Link
+        href="/admin"
+        className="mb-4 inline-block font-body text-sm text-sky/70 hover:text-mist"
+      >
+        ← Dashboard
+      </Link>
       <div className="mb-8 flex items-end justify-between">
         <div>
           <h1 className="font-display text-4xl font-extrabold tracking-tight text-mist">
@@ -80,7 +90,8 @@ export default function AdminPlayersPage() {
               {players.map((p) => (
                 <tr
                   key={p._id}
-                  className="border-b border-sky/5 last:border-0 hover:bg-white/[0.03]"
+                  onClick={() => router.push(`/admin/players/${p._id}`)}
+                  className="cursor-pointer border-b border-sky/5 last:border-0 hover:bg-white/[0.03]"
                 >
                   <td className="py-3 pl-4">
                     <div className="flex items-center gap-3">

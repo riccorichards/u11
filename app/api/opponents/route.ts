@@ -26,10 +26,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    if (body.adminPassword !== process.env.ADMIN_PASSWORD) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     await connectDB();
 
     // If this opponent is being marked as the upcoming fixture,
@@ -72,10 +68,6 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-
-    if (body.adminPassword !== process.env.ADMIN_PASSWORD) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     if (!body.opponentId) {
       return NextResponse.json(

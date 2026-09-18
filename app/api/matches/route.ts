@@ -50,20 +50,29 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    if (body.adminPassword !== process.env.ADMIN_PASSWORD) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     await connectDB();
+
+    const { calcRollingTeamCondition } = await import("@/lib/stats");
+    const TrainingSessionModel = (await import("@/lib/models/TrainingSession"))
+      .default;
+    const recentSessions = await TrainingSessionModel.find({})
+      .sort({ date: 1 })
+      .limit(10)
+      .lean();
+    const { tc, ms } = calcRollingTeamCondition(recentSessions as any);
 
     // ── Auto-calculate result ─────────────────────────────────────
     let result: "W" | "D" | "L" = "D";
     if (body.goalsFor > body.goalsAgainst) result = "W";
     else if (body.goalsFor < body.goalsAgainst) result = "L";
 
-    // ── Resolve opponent OSI ──────────────────────────────────────
+    // ── Resolve match strength context ──────────────────────────────
+    // Priority: a specifically-tracked Opponent's real OSI first (most
+    // accurate); otherwise fall back to the tournament's difficulty score,
+    // since one-off tournament opponents rarely get individual profiles.
     let resolvedOSI: number | null = null;
     const opponentId: string | null = body.opponentId ?? null;
+    const tournamentId: string | null = body.tournamentId ?? null;
 
     if (opponentId) {
       const OpponentModel = await getOpponentModel();
@@ -74,6 +83,12 @@ export async function POST(req: NextRequest) {
           resolvedOSI = calcOSI(opponent as any);
         }
       }
+    }
+
+    if (resolvedOSI === null && tournamentId) {
+      const TournamentModel = (await import("@/lib/models/Tournament")).default;
+      const tournament = await TournamentModel.findById(tournamentId).lean();
+      if (tournament) resolvedOSI = tournament.difficultyScore;
     }
 
     // ── Resolve player positions upfront (fixes CMR position bug) ─
@@ -95,8 +110,10 @@ export async function POST(req: NextRequest) {
       goalsFor: body.goalsFor,
       goalsAgainst: body.goalsAgainst,
       result,
-      trainingCondition: body.trainingCondition,
-      mentalityScore: body.mentalityScore,
+      matchType: body.matchType ?? "FRIENDLY", // ← new
+      tournamentId,
+      trainingCondition: tc,
+      mentalityScore: ms,
       opponentId,
       osi: resolvedOSI,
       playerPerformances: (body.playerPerformances ?? []).map((perf: any) => ({

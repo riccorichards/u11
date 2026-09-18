@@ -8,7 +8,6 @@ import {
   calcSessionTC,
   prsLabel,
   calcPillarScores,
-  DISCIPLINE_POINTS,
   type PillarAssessment,
   type DisciplineEvent,
 } from "@/lib/stats";
@@ -121,10 +120,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    if (body.adminPassword !== process.env.ADMIN_PASSWORD) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     await connectDB();
 
     const sessionType: string = body.sessionType ?? "mixed";
@@ -232,9 +227,11 @@ export async function POST(req: NextRequest) {
       fatigue: body.fatigue,
       coachRating: body.coachRating,
       notes: body.notes ?? "",
+      teamworkRating: body.teamwork ?? null,
+      keyAccents: body.keyAccents ?? [], // ← new line
       teamTC,
       teamMS,
-      formulaVersion: sessionFormulaVersion, // session-level version for rolling filter
+      formulaVersion: sessionFormulaVersion,
       playerLogs: enrichedLogs,
     });
 

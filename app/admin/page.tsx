@@ -10,26 +10,38 @@ const sections = [
   {
     href: "/admin/training-log",
     label: "Training Log",
-    desc: "AI-assisted session grading",
-    ready: false,
+    desc: "Log sessions and grade players",
+    ready: true,
   },
   {
     href: "/admin/skill-tree-builder",
     label: "Skill Tree",
     desc: "Build the tactical progression map",
-    ready: false,
+    ready: true,
   },
   {
     href: "/admin/content-manager",
     label: "Content Manager",
     desc: "Puzzles & badges",
-    ready: false,
+    ready: true,
   },
   {
     href: "/admin/matches",
     label: "Matches",
     desc: "Post-match player reports",
-    ready: false,
+    ready: true,
+  },
+  {
+    href: "/admin/tournaments",
+    label: "Tournaments",
+    desc: "Manage tournaments and difficulty ratings",
+    ready: true,
+  },
+  {
+    href: "/admin/leaderboard",
+    label: "Leaderboard",
+    desc: "Full squad stats, sortable — coach-only",
+    ready: true,
   },
 ];
 

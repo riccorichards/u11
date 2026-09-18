@@ -45,6 +45,16 @@ const MatchSchema = new Schema(
     result: { type: String, enum: ["W", "D", "L"], required: true },
     trainingCondition: { type: Number, min: 0, max: 1, required: true },
     mentalityScore: { type: Number, min: 0, max: 1, required: true },
+    matchType: {
+      type: String,
+      enum: ["LEAGUE", "TOURNAMENT", "FRIENDLY"],
+      default: "FRIENDLY",
+    },
+    tournamentId: {
+      type: Schema.Types.ObjectId,
+      ref: "Tournament",
+      default: null,
+    },
 
     // ── Opponent link ─────────────────────────────────────────────
     // Optional — old matches have null. AdjustedFormIndex falls back to
