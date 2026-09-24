@@ -1,12 +1,12 @@
 export function BadgeShelf({ badges }: { badges: any[] }) {
   return (
     <div className="rounded-2xl border border-sky/10 bg-white/[0.03] p-5">
-      <p className="font-body text-xs uppercase tracking-wide text-sky">
-        🏅 My Badges ({badges.length})
+      <p className="font-body text-xs uppercase tracking-wide text-sky font-semibold">
+        🏅 ჩემი ბეიჯები ({badges.length})
       </p>
       {badges.length === 0 ? (
         <p className="mt-2 font-body text-sm text-sky/50">
-          No badges yet — go earn one!
+          ბეიჯები ჯერ არ გაქვს — დროა პირველი მოიპოვო!
         </p>
       ) : (
         <div className="mt-3 grid grid-cols-4 gap-3">

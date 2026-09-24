@@ -20,8 +20,35 @@ export default auth((req) => {
       if (requestedId !== req.auth?.user?.linkedPlayerId) {
         return Response.json({ error: "Forbidden" }, { status: 403 });
       }
-      // matches own id, allowed
     } else {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return;
+  }
+
+  // ── Challenges: same self-or-admin pattern as KPI ────────────────
+  if (path.startsWith("/api/challenges")) {
+    const role = req.auth?.user?.role;
+    if (role === "COACH_ADMIN") {
+      // fall through, allowed
+    } else if (role === "PLAYER" && req.method === "GET") {
+      const requestedId = req.nextUrl.searchParams.get("playerId");
+      if (requestedId !== req.auth?.user?.linkedPlayerId) {
+        return Response.json({ error: "Forbidden" }, { status: 403 });
+      }
+    } else {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return;
+  }
+
+  // ── Player-facing puzzle API — never admin-gated ──────────────
+  const isPlayerPuzzleApi =
+    path.startsWith("/api/puzzles/today") ||
+    path.startsWith("/api/puzzles/submit") ||
+    path.startsWith("/api/puzzles/mine");
+  if (isPlayerPuzzleApi) {
+    if (!req.auth?.user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
     return;
@@ -34,31 +61,20 @@ export default auth((req) => {
     path.startsWith("/api/upload") ||
     path.startsWith("/api/training") ||
     path.startsWith("/api/leaderboard") ||
-    path.startsWith("/api/skill-tree") ||
-    (path.startsWith("/api/puzzles") &&
-      !path.startsWith("/api/puzzles/today") &&
-      !path.startsWith("/api/puzzles/submit") &&
-      req.method !== "GET") ||
-    path.startsWith("/api/badges") ||
-    path.startsWith("/api/matches") ||
-    path.startsWith("/api/opponents") ||
-    path.startsWith("/api/tournaments") ||
-    path.startsWith("/api/puzzles/mine") ||
-    path.startsWith("/api/players");
+    (path.startsWith("/api/skill-tree") && req.method !== "GET") ||
+    (path.startsWith("/api/puzzles") && req.method !== "GET") || // /today, /submit, /mine already returned above
+    (path.startsWith("/api/badges") && req.method !== "GET") ||
+    (path.startsWith("/api/matches") && req.method !== "GET") ||
+    (path.startsWith("/api/opponents") && req.method !== "GET") ||
+    (path.startsWith("/api/attributes") && req.method !== "GET") ||
+    (path.startsWith("/api/tournaments") && req.method !== "GET") ||
+    (path.startsWith("/api/players") && req.method !== "GET");
 
   if ((isAdminRoute || isAdminApi) && req.auth?.user?.role !== "COACH_ADMIN") {
     if (isAdminApi) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
     return Response.redirect(new URL("/admin/login", req.url));
-  }
-
-  // ── Player-facing puzzle API ─────────────────────────────────
-  const isPlayerPuzzleApi =
-    path.startsWith("/api/puzzles/today") ||
-    path.startsWith("/api/puzzles/submit");
-  if (isPlayerPuzzleApi && !req.auth?.user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   // ── Player-facing pages ───────────────────────────────────────
@@ -82,6 +98,7 @@ export const config = {
     "/api/admin/:path*",
     "/api/upload/:path*",
     "/api/kpi/:path*",
+    "/api/challenges/:path*",
     "/api/training/:path*",
     "/api/skill-tree/:path*",
     "/api/puzzles/:path*",
@@ -90,6 +107,7 @@ export const config = {
     "/api/opponents/:path*",
     "/api/tournaments/:path*",
     "/api/leaderboard/:path*",
+    "/api/attributes/:path*",
     "/home",
     "/home/:path*",
     "/my-dashboard",

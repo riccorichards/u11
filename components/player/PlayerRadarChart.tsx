@@ -59,21 +59,21 @@ const POS_BENCHMARKS: Record<string, RadarData> = {
 };
 
 const METRIC_LABELS: Record<string, string> = {
-  workRate: "Work Rate",
-  technicalQuality: "Technical",
-  tacticalAwareness: "Tactical",
-  focusLevel: "Focus",
-  bodyLanguage: "Body Lang.",
-  coachability: "Coachability",
+  workRate: "შრომისმოყვარეობა",
+  technicalQuality: "ტექნიკა",
+  tacticalAwareness: "ტაქტიკა",
+  focusLevel: "კონცენტრაცია",
+  bodyLanguage: "სხეულის ენა",
+  coachability: "სწავლის უნარი",
 };
 
 const METRIC_DESCRIPTIONS: Record<string, string> = {
-  workRate: "Effort and running intensity during sessions",
-  technicalQuality: "Ball control, passing and finishing execution",
-  tacticalAwareness: "Positioning, pressing triggers and shape",
-  focusLevel: "Concentration and listening to instructions",
-  bodyLanguage: "Positive signals and leadership presence",
-  coachability: "Response quality to feedback and corrections",
+  workRate: "მონდომება და სირბილის ინტენსივობა ვარჯიშზე",
+  technicalQuality: "ბურთის კონტროლი, პასი და დარტყმის შესრულება",
+  tacticalAwareness: "პოზიციური შერჩევა, პრესინგი და განლაგება",
+  focusLevel: "ყურადღება და მწვრთნელის დავალებების მოსმენა",
+  bodyLanguage: "პოზიტიური განწყობა და ლიდერული ჟესტები",
+  coachability: "შენიშვნების გათვალისწინება და სწრაფი გამოსწორება",
 };
 
 export default function PlayerRadarChart({ radarData, position }: Props) {
@@ -83,9 +83,9 @@ export default function PlayerRadarChart({ radarData, position }: Props) {
     return (
       <div className="glass rounded-2xl p-5 h-full flex flex-col items-center justify-center gap-2">
         <p className="text-sky/40 text-sm font-body text-center">
-          No training sessions logged yet.
+          ვარჯიშები ჯერ არ არის აღრიცხული.
           <br />
-          Radar chart will appear after first session.
+          რადარი პირველივე ვარჯიშის შემდეგ გამოჩნდება.
         </p>
       </div>
     );
@@ -102,10 +102,10 @@ export default function PlayerRadarChart({ radarData, position }: Props) {
     <div className="glass rounded-2xl p-5">
       <div className="mb-4">
         <h3 className="font-display text-lg font-bold uppercase tracking-wider text-white">
-          Performance Radar
+          უნარების რადარი
         </h3>
         <p className="text-xs text-sky/40 font-body mt-0.5">
-          Season average vs {position} position benchmark
+          სეზონის საშუალო vs {position} პოზიციის ეტალონი
         </p>
       </div>
 
@@ -116,12 +116,12 @@ export default function PlayerRadarChart({ radarData, position }: Props) {
             dataKey="metric"
             tick={{
               fill: "rgba(151,202,219,0.6)",
-              fontSize: 11,
+              fontSize: 10,
               fontFamily: "JetBrains Mono",
             }}
           />
           <Radar
-            name="Position Avg"
+            name="პოზიციის საშუალო"
             dataKey="benchmark"
             stroke="rgba(151,202,219,0.3)"
             fill="rgba(151,202,219,0.05)"
@@ -129,7 +129,7 @@ export default function PlayerRadarChart({ radarData, position }: Props) {
             strokeDasharray="4 4"
           />
           <Radar
-            name="Your Score"
+            name="შენი ქულა"
             dataKey="player"
             stroke="#018ABE"
             fill="rgba(1,138,190,0.2)"
@@ -190,7 +190,7 @@ export default function PlayerRadarChart({ radarData, position }: Props) {
       <div className="flex items-center gap-4 mt-4 pt-3 border-t border-sky/10">
         <div className="flex items-center gap-1.5">
           <div className="w-4 h-0.5 bg-ocean" />
-          <span className="text-[10px] font-mono text-sky/40">Your Score</span>
+          <span className="text-[10px] font-mono text-sky/40">შენი ქულა</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div
@@ -198,7 +198,7 @@ export default function PlayerRadarChart({ radarData, position }: Props) {
             style={{ borderTop: "1px dashed rgba(151,202,219,0.3)" }}
           />
           <span className="text-[10px] font-mono text-sky/40">
-            {position} Benchmark
+            {position} ეტალონი
           </span>
         </div>
       </div>

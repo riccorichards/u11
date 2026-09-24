@@ -7,7 +7,7 @@ import {
 } from "@/components/admin/MatchPlayerRow";
 
 const DEFAULT_PERF: MatchPerformance = {
-  minutesPlayed: 60,
+  minutesPlayed: 40,
   goals: 0,
   assists: 0,
   rating: 7,

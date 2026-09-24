@@ -43,7 +43,7 @@ export default function LandingPage() {
           </p>
 
           <a
-            href="#vision"
+            href="/login"
             className="mt-10 rounded-md bg-ocean px-8 py-4 font-body text-base font-medium text-white shadow-lg shadow-ocean/20 transition hover:bg-[#0299d1] cursor-pointer"
           >
             დაიწყე თავგადასავალი

@@ -10,6 +10,12 @@ type Row = {
   number: number;
   position: string;
   avatarUrl: string | null;
+  level: number;
+  pts: number;
+  badgesEarned: number;
+  puzzlesSolved: number;
+  puzzlesCorrect: number;
+  challengesCompleted: number;
   matchesPlayed: number;
   goals: number;
   assists: number;
@@ -24,7 +30,19 @@ type Row = {
   disciplineScore: number;
 };
 
-const COLUMNS: { key: keyof Row; label: string; suffix?: string }[] = [
+const ENGAGEMENT_COLUMNS: { key: keyof Row; label: string }[] = [
+  { key: "level", label: "LVL" },
+  { key: "pts", label: "PTS" },
+  { key: "badgesEarned", label: "BADGES" },
+  { key: "puzzlesCorrect", label: "PUZZLES ✓" },
+  { key: "challengesCompleted", label: "CHALLENGES" },
+];
+
+const PERFORMANCE_COLUMNS: {
+  key: keyof Row;
+  label: string;
+  suffix?: string;
+}[] = [
   { key: "matchesPlayed", label: "MP" },
   { key: "goals", label: "G" },
   { key: "assists", label: "A" },
@@ -41,7 +59,7 @@ const COLUMNS: { key: keyof Row; label: string; suffix?: string }[] = [
 
 export default function LeaderboardPage() {
   const [rows, setRows] = useState<Row[]>([]);
-  const [sortKey, setSortKey] = useState<keyof Row>("rtg");
+  const [sortKey, setSortKey] = useState<keyof Row>("pts");
   const [sortDesc, setSortDesc] = useState(true);
   const [loading, setLoading] = useState(true);
 
@@ -70,7 +88,7 @@ export default function LeaderboardPage() {
   });
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-12">
+    <div className="mx-auto max-w-7xl px-4 py-12">
       <Link
         href="/admin"
         className="mb-4 inline-block font-body text-sm text-sky/70 hover:text-mist"
@@ -83,6 +101,8 @@ export default function LeaderboardPage() {
       <p className="mt-1 font-body text-xs text-sky/60">
         Coach-only view. Includes discipline and mental scores — never shown to
         players or parents.
+        <span className="text-[#E0A72F]"> Amber columns</span> are platform
+        engagement — sorted here by default, since that's the real point.
       </p>
 
       {loading ? (
@@ -95,7 +115,18 @@ export default function LeaderboardPage() {
                 <th className="sticky left-0 bg-[#031229] py-2 pl-4 pr-3 font-medium">
                   Player
                 </th>
-                {COLUMNS.map((c) => (
+                {ENGAGEMENT_COLUMNS.map((c) => (
+                  <th
+                    key={c.key}
+                    onClick={() => handleSort(c.key)}
+                    className="cursor-pointer whitespace-nowrap px-2 py-2 text-center font-medium text-[#E0A72F] hover:text-mist"
+                  >
+                    {c.label}
+                    {sortKey === c.key && (sortDesc ? " ↓" : " ↑")}
+                  </th>
+                ))}
+                <th className="border-l border-sky/20" />
+                {PERFORMANCE_COLUMNS.map((c) => (
                   <th
                     key={c.key}
                     onClick={() => handleSort(c.key)}
@@ -127,7 +158,16 @@ export default function LeaderboardPage() {
                       </span>
                     </div>
                   </td>
-                  {COLUMNS.map((c) => (
+                  {ENGAGEMENT_COLUMNS.map((c) => (
+                    <td
+                      key={c.key}
+                      className="px-2 py-2 text-center font-mono text-[#E0A72F]"
+                    >
+                      {r[c.key]}
+                    </td>
+                  ))}
+                  <td className="border-l border-sky/20" />
+                  {PERFORMANCE_COLUMNS.map((c) => (
                     <td
                       key={c.key}
                       className="px-2 py-2 text-center font-mono text-mist"

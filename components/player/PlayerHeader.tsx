@@ -57,13 +57,13 @@ export function PlayerHeader({
       </div>
 
       <div>
-        <p className="font-body text-sm text-sky">Welcome back,</p>
+        <p className="font-body text-sm text-sky">მოგესალმები,</p>
         <h1 className="font-display text-3xl font-extrabold leading-tight text-mist">
           {name}!
         </h1>
         {currentStreak > 0 && (
           <p className="mt-0.5 font-body text-sm text-[#E0A72F]">
-            🔥 {currentStreak} day streak
+            🔥 {currentStreak}-დღიანი სერია
           </p>
         )}
       </div>

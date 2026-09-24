@@ -49,10 +49,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    if (body.adminPassword !== process.env.ADMIN_PASSWORD) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     if (!body.playerId || !body.weekOf) {
       return NextResponse.json(
         { error: "playerId and weekOf are required" },
@@ -74,13 +70,11 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    // Normalize weekOf to the Monday of that week so assessments
-    // are always anchored to the week start regardless of which day they're entered.
     const date = new Date(body.weekOf);
-    const day = date.getUTCDay();
-    const diff = day === 0 ? -6 : 1 - day; // Monday = 1
-    date.setUTCDate(date.getUTCDate() + diff);
-    const weekOf = date.toISOString().split("T")[0];
+    const monthStart = new Date(
+      Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1),
+    );
+    const weekOf = monthStart.toISOString().split("T")[0];
 
     // Upsert: update if this player+week already exists, create if not
     const assessment = await PlayerAttributeModel.findOneAndUpdate(

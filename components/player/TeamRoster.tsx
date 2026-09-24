@@ -17,8 +17,8 @@ export function TeamRoster() {
 
   return (
     <div className="mx-6 mt-6 rounded-2xl border border-sky/10 bg-white/[0.03] p-5">
-      <p className="font-body text-xs uppercase tracking-wide text-sky">
-        👥 Squad
+      <p className="font-body text-xs uppercase tracking-wide text-sky font-semibold">
+        👥 გუნდის შემადგენლობა
       </p>
       <div className="mt-3 space-y-2">
         {players.map((p) => (
@@ -37,7 +37,7 @@ export function TeamRoster() {
                 Lv {p.level ?? 1}
               </span>
               <span className="font-mono text-xs text-sky/60">
-                {p.currentXp ?? 0} pts
+                {p.currentXp ?? 0} XP
               </span>
             </span>
           </div>

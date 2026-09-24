@@ -429,7 +429,26 @@ export function calcProductionProfile(
   player: Player,
   matches: Match[],
 ): ProductionProfile {
-  const mins = player.minutesPlayed || 0;
+  const participatedMatches = matches.filter((m) =>
+    m.playerPerformances.some(
+      (p) => String(p.playerId) === String(player._id) && p.minutesPlayed > 0,
+    ),
+  );
+
+  let mins = 0,
+    goals = 0,
+    assists = 0;
+  for (const m of participatedMatches) {
+    const perf = m.playerPerformances.find(
+      (p) => String(p.playerId) === String(player._id),
+    );
+    if (perf) {
+      mins += perf.minutesPlayed ?? 0;
+      goals += perf.goals ?? 0;
+      assists += perf.assists ?? 0;
+    }
+  }
+
   if (mins === 0) {
     return {
       goalsPer80: 0,
@@ -439,22 +458,14 @@ export function calcProductionProfile(
     };
   }
 
-  const goalsPer80 = parseFloat(
-    ((player.goals / mins) * MATCH_DURATION).toFixed(2),
-  );
+  const goalsPer80 = parseFloat(((goals / mins) * MATCH_DURATION).toFixed(2));
   const assistsPer80 = parseFloat(
-    ((player.assists / mins) * MATCH_DURATION).toFixed(2),
+    ((assists / mins) * MATCH_DURATION).toFixed(2),
   );
   const goalInvolvementPer80 = parseFloat(
-    (((player.goals + player.assists) / mins) * MATCH_DURATION).toFixed(2),
+    (((goals + assists) / mins) * MATCH_DURATION).toFixed(2),
   );
 
-  // Match Win Rate: games won where this player had minutes played
-  const participatedMatches = matches.filter((m) =>
-    m.playerPerformances.some(
-      (p) => String(p.playerId) === String(player._id) && p.minutesPlayed > 0,
-    ),
-  );
   const wins = participatedMatches.filter((m) => m.result === "W").length;
   const matchWinRate = participatedMatches.length
     ? parseFloat(((wins / participatedMatches.length) * 100).toFixed(1))
@@ -1298,7 +1309,7 @@ export function calcPlayerWeekSummaries(
       summaryMap[pid].metricSums.coachability += log.coachability;
     });
   });
-  
+
   return Object.entries(summaryMap)
     .map(([pid, data]) => {
       const player = playerMap[pid];

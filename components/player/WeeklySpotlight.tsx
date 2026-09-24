@@ -17,12 +17,12 @@ export function WeeklySpotlight() {
 
   return (
     <div className="mx-6 mt-6 rounded-2xl border border-sky/10 bg-white/[0.03] p-5">
-      <p className="font-body text-xs uppercase tracking-wide text-sky">
-        🏆 {data.category}
+      <p className="font-body text-xs uppercase tracking-wide text-sky font-semibold">
+        🏆 {data.category ?? "კვირის ყურადღების ცენტრში"}
       </p>
       {data.top5.length === 0 ? (
         <p className="mt-3 font-body text-sm text-sky/50">
-          No standout performances yet this week.
+          ამ კვირაში გამორჩეული შედეგები ჯერ არ დაფიქსირებულა.
         </p>
       ) : (
         <div className="mt-3 space-y-3">
@@ -40,7 +40,7 @@ export function WeeklySpotlight() {
               <span className="font-body text-sm text-mist">
                 {p.name} {p.surname}
               </span>
-              <span className="ml-auto font-mono text-sm text-ocean">
+              <span className="ml-auto font-mono text-sm text-ocean font-semibold">
                 {p.value}
               </span>
             </div>

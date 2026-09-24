@@ -4,22 +4,22 @@ const ARC_CONTENT: Record<string, { icon: any; text: string; color: string }> =
   {
     progressing: {
       icon: TrendingUp,
-      text: "You're improving — keep it up!",
+      text: "შესამჩნევად პროგრესირებ — ასე გააგრძელე!",
       color: "#1FA97A",
     },
     plateauing: {
       icon: Minus,
-      text: "Holding steady — time to push for the next level",
+      text: "სტაბილურ ფორმაში ხარ — დროა მომდევნო დონეზე გადახვიდე!",
       color: "#E0A72F",
     },
     regressing: {
       icon: TrendingDown,
-      text: "A tougher stretch — talk to your coach about it",
+      text: "შედარებით რთული პერიოდია — გაესაუბრე მწვრთნელს",
       color: "#E8735C",
     },
     insufficient_data: {
       icon: HelpCircle,
-      text: "Keep training — your trend will show up soon",
+      text: "გააგრძელე ვარჯიში — შენი დინამიკა მალე გამოჩნდება",
       color: "#97CADB",
     },
   };

@@ -8,21 +8,21 @@ async function getTeamData() {
 
 export async function TeamMetadataCard() {
   const data = await getTeamData();
-  const s = data.stats; // the actual W-D-L/goals fields live here, not at the top level
+  const s = data.stats;
 
   const statBoxes = [
-    { label: "Record", value: `${s.wins}-${s.draws}-${s.losses}` },
-    { label: "Goals", value: `${s.totalGoals}:${s.receivedGoals}` },
-    { label: "Teamwork", value: `${data.teamworkScore}%` },
-    { label: "Team XP", value: data.totalTeamXp },
-    { label: "Badges Won", value: data.totalBadgesAwarded },
-    { label: "Clean Sheets", value: s.cleanSheets },
+    { label: "ბალანსი", value: `${s.wins}-${s.draws}-${s.losses}` },
+    { label: "ბურთები", value: `${s.totalGoals}:${s.receivedGoals}` },
+    { label: "გუნდურობა", value: `${data.teamworkScore}%` },
+    { label: "გუნდის XP", value: data.totalTeamXp },
+    { label: "ბეიჯები", value: data.totalBadgesAwarded },
+    { label: "მშრალი მატჩი", value: s.cleanSheets },
   ];
 
   return (
     <div className="mx-6 mt-6 rounded-2xl border border-sky/10 bg-white/[0.03] p-5">
-      <p className="font-body text-xs uppercase tracking-wide text-sky">
-        📊 Season So Far
+      <p className="font-body text-xs uppercase tracking-wide text-sky font-semibold">
+        📊 სეზონის სტატისტიკა
       </p>
       <div className="mt-3 grid grid-cols-3 gap-3">
         {statBoxes.map((box) => (

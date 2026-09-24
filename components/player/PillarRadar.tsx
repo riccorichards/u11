@@ -16,7 +16,6 @@ interface Props {
   position: string;
 }
 
-// Position-specific pillar benchmarks
 const PILLAR_BENCHMARKS: Record<
   string,
   Omit<PillarScores, "overall" | "weeklySnapshots">
@@ -27,6 +26,13 @@ const PILLAR_BENCHMARKS: Record<
   FWD: { physical: 7.5, technical: 8.0, tactical: 6.5, mental: 7.0 },
 };
 
+const PILLAR_LABELS: Record<string, string> = {
+  Physical: "ფიზიკური",
+  Technical: "ტექნიკური",
+  Tactical: "ტაქტიკური",
+  Mental: "მენტალური",
+};
+
 const PILLAR_COLORS: Record<string, string> = {
   Physical: "#f87171",
   Technical: "#a78bfa",
@@ -35,13 +41,14 @@ const PILLAR_COLORS: Record<string, string> = {
 };
 
 const PILLAR_DESCS: Record<string, string> = {
-  Physical: "Sprint speed, stamina, strength, agility",
-  Technical: "First touch, passing, shooting, dribbling",
-  Tactical: "Positioning, pressing, shape, decisions",
-  Mental: "Composure, leadership, resilience, coachability",
+  Physical: "სისწრაფე, გამძლეობა, ძალა, მოქნილობა",
+  Technical: "პირველი შეხება, პასი, დარტყმა, დრიბლინგი",
+  Tactical: "პოზიციონირება, პრესინგი, გადაწყვეტილება",
+  Mental: "სიმშვიდე, ლიდერობა, ხასიათი, სწავლის უნარი",
 };
 
-const BOOTSTRAP_THRESHOLD = 3;
+
+const BOOTSTRAP_THRESHOLD = 2;
 
 export default function PillarRadar({
   pillarScores,
@@ -53,22 +60,26 @@ export default function PillarRadar({
 
   const chartData = [
     {
-      metric: "Physical",
+      metric: PILLAR_LABELS.Physical,
+      rawKey: "Physical",
       player: pillarScores.physical,
       benchmark: benchmark.physical,
     },
     {
-      metric: "Technical",
+      metric: PILLAR_LABELS.Technical,
+      rawKey: "Technical",
       player: pillarScores.technical,
       benchmark: benchmark.technical,
     },
     {
-      metric: "Tactical",
+      metric: PILLAR_LABELS.Tactical,
+      rawKey: "Tactical",
       player: pillarScores.tactical,
       benchmark: benchmark.tactical,
     },
     {
-      metric: "Mental",
+      metric: PILLAR_LABELS.Mental,
+      rawKey: "Mental",
       player: pillarScores.mental,
       benchmark: benchmark.mental,
     },
@@ -83,10 +94,10 @@ export default function PillarRadar({
           </div>
           <div>
             <h3 className="font-display text-lg font-bold uppercase tracking-wider text-white">
-              Player Profile
+              მოთამაშის პროფილი
             </h3>
             <p className="text-xs text-sky/40 font-body mt-0.5">
-              Five-pillar attribute radar · {position} benchmark
+              4 მთავარი საყრდენი · {position} ეტალონი
             </p>
           </div>
         </div>
@@ -94,22 +105,21 @@ export default function PillarRadar({
           <div className="font-display text-2xl font-black text-purple-400">
             {pillarScores.overall.toFixed(1)}
           </div>
-          <div className="text-[10px] font-mono text-sky/40">OVERALL</div>
+          <div className="text-[10px] font-mono text-sky/40 uppercase">
+            საერთო
+          </div>
         </div>
       </div>
 
       {/* Bootstrap warning */}
       {inBootstrap && (
-        <div className="flex items-start gap-2 mb-3 px-3 py-2 glass rounded-xl border border-yellow-500/20">
-          <AlertCircle
-            size={11}
-            className="text-yellow-400 flex-shrink-0 mt-0.5"
-          />
-          <p className="text-[10px] font-mono text-yellow-400/80">
-            {assessmentCount} of {BOOTSTRAP_THRESHOLD} weekly assessments —
-            radar shows current data. Expectation model activates after{" "}
-            {BOOTSTRAP_THRESHOLD - assessmentCount} more assessment
-            {BOOTSTRAP_THRESHOLD - assessmentCount !== 1 ? "s" : ""}.
+        <div className="flex items-start gap-2 mb-3 px-3 py-2 glass rounded-xl border border-ocean/20">
+          <span className="text-sm">🌱</span>
+          <p className="text-[10px] font-mono text-sky/70">
+            Still building your full picture —{" "}
+            {BOOTSTRAP_THRESHOLD - assessmentCount} more monthly check-in
+            {BOOTSTRAP_THRESHOLD - assessmentCount !== 1 ? "s" : ""} and this
+            chart gets sharper!
           </p>
         </div>
       )}
@@ -121,10 +131,10 @@ export default function PillarRadar({
           </div>
           <div className="text-center">
             <p className="text-white font-display font-bold text-sm">
-              No assessments yet
+              შეფასებები ჯერ არ არის
             </p>
             <p className="text-sky/40 text-xs font-body mt-1">
-              Log weekly pillar assessments in Admin → Assessment
+              შეფასებები შეიყვანება ყოველკვირეულად მწვრთნელის მიერ
             </p>
           </div>
         </div>
@@ -137,22 +147,20 @@ export default function PillarRadar({
                 dataKey="metric"
                 tick={{
                   fill: "rgba(151,202,219,0.7)",
-                  fontSize: 11,
+                  fontSize: 10,
                   fontFamily: "JetBrains Mono",
                 }}
               />
-              {/* Benchmark */}
               <Radar
-                name={`${position} Benchmark`}
+                name={`${position} ეტალონი`}
                 dataKey="benchmark"
                 stroke="rgba(151,202,219,0.3)"
                 fill="rgba(151,202,219,0.05)"
                 strokeWidth={1}
                 strokeDasharray="4 4"
               />
-              {/* Player */}
               <Radar
-                name="Player"
+                name="მოთამაშე"
                 dataKey="player"
                 stroke="#a78bfa"
                 fill="rgba(167,139,250,0.15)"
@@ -176,9 +184,9 @@ export default function PillarRadar({
 
           {/* Pillar breakdown */}
           <div className="space-y-2.5 mt-2">
-            {chartData.map(({ metric, player, benchmark: bench }) => {
+            {chartData.map(({ metric, rawKey, player, benchmark: bench }) => {
               const diff = player - bench;
-              const color = PILLAR_COLORS[metric];
+              const color = PILLAR_COLORS[rawKey];
               return (
                 <div key={metric} className="flex items-center gap-3">
                   <div className="w-20 flex-shrink-0">
@@ -186,7 +194,7 @@ export default function PillarRadar({
                       {metric}
                     </div>
                     <div className="text-[8px] font-body text-sky/30 leading-tight mt-0.5">
-                      {PILLAR_DESCS[metric]}
+                      {PILLAR_DESCS[rawKey]}
                     </div>
                   </div>
                   <div className="flex-1 h-1.5 bg-navy-800/60 rounded-full overflow-hidden">
@@ -218,7 +226,9 @@ export default function PillarRadar({
           <div className="flex items-center gap-4 mt-4 pt-3 border-t border-sky/10">
             <div className="flex items-center gap-1.5">
               <div className="w-4 h-0.5 bg-purple-400" />
-              <span className="text-[10px] font-mono text-sky/40">Player</span>
+              <span className="text-[10px] font-mono text-sky/40">
+                მოთამაშე
+              </span>
             </div>
             <div className="flex items-center gap-1.5">
               <div
@@ -226,11 +236,11 @@ export default function PillarRadar({
                 style={{ borderTop: "1px dashed rgba(151,202,219,0.3)" }}
               />
               <span className="text-[10px] font-mono text-sky/40">
-                {position} Benchmark
+                {position} ეტალონი
               </span>
             </div>
             <span className="ml-auto text-[10px] font-mono text-sky/30">
-              {assessmentCount} week{assessmentCount !== 1 ? "s" : ""} of data
+              {assessmentCount} კვირის მონაცემი
             </span>
           </div>
         </>

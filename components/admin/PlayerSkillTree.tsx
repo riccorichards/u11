@@ -37,13 +37,17 @@ export function PlayerSkillTree({
   useEffect(() => {
     fetch("/api/skill-tree")
       .then((r) => r.json())
-      .then(setNodes);
+      .then((data) => setNodes(Array.isArray(data) ? data : []));
+
     fetch(`/api/skill-tree/progress?playerId=${playerId}`)
       .then((r) => r.json())
-      .then(setProgressMap);
-    fetch("/api/puzzles")
+      .then((data) =>
+        setProgressMap(data && typeof data === "object" ? data : {}),
+      );
+
+    fetch("/api/puzzles/mine")
       .then((r) => r.json())
-      .then(setPuzzles);
+      .then((data) => setPuzzles(Array.isArray(data) ? data : []));
   }, [playerId]);
 
   const branchNodes = nodes.filter((n) =>

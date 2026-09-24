@@ -37,7 +37,7 @@ export function TodaysPuzzle() {
       <div className="mx-6 mt-6 rounded-2xl border border-sky/10 bg-white/[0.03] p-5 text-center">
         <p className="text-3xl">🧩</p>
         <p className="mt-2 font-body text-sm text-sky/60">
-          No puzzle today — check back tomorrow!
+          დღეს ფაზლი არ არის — შემოიხედე ხვალ!
         </p>
       </div>
     );
@@ -47,11 +47,13 @@ export function TodaysPuzzle() {
     return (
       <div className="mx-6 mt-6 rounded-2xl border border-[#1FA97A]/30 bg-[#1FA97A]/10 p-5 text-center">
         <p className="text-3xl">✅</p>
-        <p className="mt-2 font-display text-lg font-bold text-mist">Solved!</p>
+        <p className="mt-2 font-display text-lg font-bold text-mist">
+          ამოხსნილია!
+        </p>
         <p className="font-body text-sm text-sky/70">
           {data.wasCorrect
-            ? `+${data.awardedXp} XP earned`
-            : "Nice try — new puzzle coming soon"}
+            ? `+${data.awardedXp} XP დაგერიცხა!`
+            : "კარგი მცდელობა იყო — ახალი ფაზლი მალე დაემატება"}
         </p>
       </div>
     );
@@ -59,8 +61,8 @@ export function TodaysPuzzle() {
 
   return (
     <div className="mx-6 mt-6 rounded-2xl border border-ocean/30 bg-gradient-to-br from-ocean/10 to-transparent p-5">
-      <p className="font-body text-xs uppercase tracking-wide text-sky">
-        🧩 Today's Puzzle
+      <p className="font-body text-xs uppercase tracking-wide text-sky font-semibold">
+        🧩 დღის ტაქტიკური ფაზლი
       </p>
       <h2 className="mt-2 font-display text-xl font-bold text-mist">
         {data.puzzle.title}
@@ -102,8 +104,8 @@ export function TodaysPuzzle() {
         <div className="mt-4 rounded-lg bg-white/5 p-3">
           <p className="font-body text-sm font-medium text-mist">
             {result.isCorrect
-              ? `🎉 Correct! +${result.awardedXp} XP`
-              : "Not quite — here's why:"}
+              ? `🎉 სწორია! +${result.awardedXp} XP`
+              : "არაზუსტია — აი, რატომ:"}
           </p>
           <p className="mt-1 font-body text-xs text-sky/70">
             {result.explanation}

@@ -4,6 +4,9 @@ import PlayerModel from "@/lib/models/Player";
 import MatchModel from "@/lib/models/Match";
 import TrainingSessionModel from "@/lib/models/TrainingSession";
 import PlayerAttributeModel from "@/lib/models/PlayerAttribute";
+import PlayerBadgeModel from "@/lib/models/PlayerBadge";
+import PuzzleSubmissionModel from "@/lib/models/PuzzleSubmission";
+import PlayerChallengeModel from "@/lib/models/PlayerChallenge";
 import {
   calcAvgRating,
   calcConsistencyScore,
@@ -29,13 +32,23 @@ export async function GET() {
   try {
     await connectDB();
 
-    const [players, allMatches, allSessions, allAssessments] =
-      await Promise.all([
-        PlayerModel.find({}).sort({ number: 1 }).lean(),
-        MatchModel.find({}).lean(),
-        TrainingSessionModel.find({}).lean(),
-        PlayerAttributeModel.find({}).lean(),
-      ]);
+    const [
+      players,
+      allMatches,
+      allSessions,
+      allAssessments,
+      allBadges,
+      allSubmissions,
+      allChallenges,
+    ] = await Promise.all([
+      PlayerModel.find({}).sort({ number: 1 }).lean(),
+      MatchModel.find({}).lean(),
+      TrainingSessionModel.find({}).lean(),
+      PlayerAttributeModel.find({}).lean(),
+      PlayerBadgeModel.find({}).lean(),
+      PuzzleSubmissionModel.find({}).lean(),
+      PlayerChallengeModel.find({}).lean(),
+    ]);
 
     const DisciplineLogModel = await getDisciplineLogModel();
     const allDisciplineEvents = DisciplineLogModel
@@ -47,6 +60,23 @@ export async function GET() {
 
     const rows = players.map((player: any) => {
       const id = String(player._id);
+
+      // ── Engagement / learning stats — the actual point of the platform ──
+      const badgesEarned = allBadges.filter(
+        (b: any) => String(b.playerId) === id,
+      ).length;
+
+      const playerSubmissions = allSubmissions.filter(
+        (s: any) => String(s.playerId) === id,
+      );
+      const puzzlesSolved = playerSubmissions.length;
+      const puzzlesCorrect = playerSubmissions.filter(
+        (s: any) => s.isCorrect,
+      ).length;
+
+      const challengesCompleted = allChallenges.filter(
+        (c: any) => String(c.playerId) === id && c.status === "completed",
+      ).length;
 
       // ── Match-derived ──────────────────────────────────────────
       const performances = typedMatches
@@ -108,6 +138,12 @@ export async function GET() {
         number: player.number,
         position: player.position,
         avatarUrl: player.avatarUrl ?? null,
+        level: player.level ?? 1,
+        pts: player.currentXp ?? 0,
+        badgesEarned,
+        puzzlesSolved,
+        puzzlesCorrect,
+        challengesCompleted,
         matchesPlayed,
         goals,
         assists,

@@ -17,12 +17,12 @@ export async function TeamPulseCard() {
   return (
     <div className="mx-6 mt-6 rounded-2xl border border-sky/10 bg-white/[0.03] p-5">
       <div className="flex items-center justify-between">
-        <p className="font-body text-xs uppercase tracking-wide text-sky">
-          ⚡ Team Pulse
+        <p className="font-body text-xs uppercase tracking-wide text-sky font-semibold">
+          ⚡ გუნდის პულსი
         </p>
         {isHighEnergy && (
           <span className="rounded-full bg-[#E0A72F]/20 px-2.5 py-1 font-body text-xs font-medium text-[#E0A72F]">
-            🔥 High Energy Squad
+            🔥 მაღალი ენერგია
           </span>
         )}
       </div>
@@ -31,7 +31,7 @@ export async function TeamPulseCard() {
           <p className="font-display text-3xl font-extrabold text-mist">
             {tcPct}%
           </p>
-          <p className="font-body text-xs text-sky/60">Condition</p>
+          <p className="font-body text-xs text-sky/60">კონდიცია</p>
           <div className="mt-2 h-2.5 rounded-full bg-white/10">
             <div
               className="h-2.5 rounded-full bg-ocean"
@@ -43,7 +43,7 @@ export async function TeamPulseCard() {
           <p className="font-display text-3xl font-extrabold text-mist">
             {msPct}%
           </p>
-          <p className="font-body text-xs text-sky/60">Mentality</p>
+          <p className="font-body text-xs text-sky/60">მენტალიტეტი</p>
           <div className="mt-2 h-2.5 rounded-full bg-white/10">
             <div
               className="h-2.5 rounded-full bg-[#1FA97A]"

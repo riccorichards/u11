@@ -8,6 +8,8 @@ import PillarRadar from "@/components/player/PillarRadar";
 import { KPIProgressCard } from "@/components/player/KPIProgressCard";
 import { BadgeShelf } from "@/components/player/BadgeShelf";
 import { TrendBanner } from "@/components/player/TrendBanner";
+import { MatchHistoryList } from "@/components/player/MatchHistoryList";
+import { TrainingHistoryList } from "@/components/player/TrainingHistoryList";
 
 export default async function MyDashboardPage() {
   const session = await auth();
@@ -29,6 +31,8 @@ export default async function MyDashboardPage() {
     pillarAssessments,
     developmentArc,
     kpiProgress,
+    matchHistory,
+    sessionHistory,
   } = profile;
 
   return (
@@ -62,6 +66,12 @@ export default async function MyDashboardPage() {
       </div>
       <div className="mx-6 mt-4">
         <BadgeShelf badges={badges} />
+      </div>
+      <div className="mx-6 mt-4">
+        <MatchHistoryList matches={matchHistory} />
+      </div>
+      <div className="mx-6 mt-4">
+        <TrainingHistoryList sessions={sessionHistory} />
       </div>
     </div>
   );

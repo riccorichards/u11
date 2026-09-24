@@ -129,6 +129,17 @@ export default function AdminPlayersPage() {
                       <span className="text-[#E0A72F]">Pending</span>
                     )}
                   </td>
+                  <td className="pr-4">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/admin/players/${p._id}/view`);
+                      }}
+                      className="font-body text-xs text-ocean hover:underline"
+                    >
+                      👁 View
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

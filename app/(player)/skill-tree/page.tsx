@@ -16,10 +16,10 @@ export default async function SkillTreePage() {
     <div className="pb-8">
       <div className="px-6 pt-8">
         <h1 className="font-display text-3xl font-extrabold text-mist">
-          Skill Tree
+          საფეხბურთო ხე
         </h1>
         <p className="mt-1 font-body text-sm text-sky/60">
-          Grow your game, one skill at a time
+          გაზარდე შენი ოსტატობა, უნარიდან უნარამდე
         </p>
       </div>
       <PlayerSkillTree
