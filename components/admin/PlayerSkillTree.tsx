@@ -72,7 +72,7 @@ export function PlayerSkillTree({
               : "border border-sky/20 text-sky/70"
           }`}
         >
-          🌍 Global
+          🌍 ზოგადი
         </button>
         <button
           onClick={() => setBranch("position")}
@@ -82,7 +82,7 @@ export function PlayerSkillTree({
               : "border border-sky/20 text-sky/70"
           }`}
         >
-          ⚽ {position} Skills
+          ⚽ {position}-ის უნარები
         </button>
       </div>
 
@@ -90,7 +90,7 @@ export function PlayerSkillTree({
         <div className="mt-10 flex flex-col items-center gap-2 text-center">
           <p className="text-3xl">🌱</p>
           <p className="font-body text-sm text-sky/50">
-            Nothing planted here yet — check back soon!
+            აქ ჯერ არაფერია დამატებული — შეამოწმეთ მოგვიანებით!
           </p>
         </div>
       ) : (

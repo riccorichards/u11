@@ -54,10 +54,10 @@ export default async function ViewAsPlayerPage({
           href={`/admin/players/${params.id}`}
           className="font-body text-sm text-sky/70 hover:text-mist"
         >
-          ← Back to Editor
+          ← რედაქტორზე დაბრუნება
         </Link>
         <span className="rounded-full bg-ocean/20 px-3 py-1 font-body text-xs text-ocean">
-          👁 Viewing as {player.name} {player.surname}
+          👁 ნახვა როგორც {player.name} {player.surname}
         </span>
       </div>
 
@@ -95,12 +95,12 @@ export default async function ViewAsPlayerPage({
 
       <div className="mt-4">
         <p className="font-body text-xs uppercase tracking-wide text-sky">
-          🎯 Challenges
+          🎯 გამოწვევები
         </p>
         <div className="mt-2 space-y-2">
           {challenges.length === 0 && (
             <p className="font-body text-sm text-sky/50">
-              No challenges assigned.
+              გამოწვევები დანიშნული არ არის.
             </p>
           )}
           {challenges.map((c: any) => (
@@ -115,7 +115,7 @@ export default async function ViewAsPlayerPage({
 
       <div className="mt-4">
         <p className="font-body text-xs uppercase tracking-wide text-sky">
-          🌳 Skill Tree
+          🌳 უნარების ხე
         </p>
         <PlayerSkillTree playerId={params.id} position={player.position} />
       </div>

@@ -1,1 +1,1 @@
-self.__REACT_LOADABLE_MANIFEST="{}"
+self.__REACT_LOADABLE_MANIFEST="{\"components\\\\player\\\\BrainTree.tsx -> react-d3-tree\":{\"id\":\"components\\\\player\\\\BrainTree.tsx -> react-d3-tree\",\"files\":[\"static/chunks/_app-pages-browser_node_modules_react-d3-tree_lib_esm_index_js.js\"]}}"

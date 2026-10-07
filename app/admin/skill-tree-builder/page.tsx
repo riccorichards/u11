@@ -1,376 +1,692 @@
+// Path: app/admin/skill-tree-builder/page.tsx
 "use client";
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { SkillTreePreview } from "@/components/admin/SkillTreePreview";
 
-const POSITIONS = ["GK", "DEF", "MID", "FWD"] as const;
-const STATUSES = ["LOCKED", "IN_PROGRESS", "MASTERED"] as const;
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import AdminHeader from "@/components/admin/AdminHeader";
+import AudiencePicker, {
+  AudienceValue,
+  DEFAULT_AUDIENCE,
+  toApiAudience,
+} from "@/components/admin/AudiencePicker";
+import ConfirmDialog from "@/components/admin/ConfirmDialog";
+import ModuleDialog, { ModuleRecord } from "@/components/admin/ModuleDialog";
+import { useToast } from "@/components/admin/ResultToast";
+import {
+  errorMessage,
+  openTopicMessage,
+} from "@/components/admin/resultMessages";
+import SkillTreePreview from "@/components/admin/SkillTreePreview";
+import StatusPill from "@/components/admin/StatusPill";
+import TopicForm, { RawNode } from "@/components/admin/TopicForm";
+import {
+  POSITIONS,
+  PROGRESS_STATUS,
+  TASK_TYPE_LABEL,
+  button,
+  card,
+  cx,
+  playerName,
+  plural,
+  ui,
+} from "@/components/admin/ui";
+import {
+  ModuleTreeDTO,
+  invalidateAdminData,
+  sendJson,
+  useCached,
+  usePlayers,
+} from "@/components/admin/useAdminData";
+
+const UNASSIGNED = "unassigned";
+type Mode =
+  | { kind: "view" }
+  | { kind: "create"; parentId: string | null }
+  | { kind: "edit" };
 
 export default function SkillTreeBuilderPage() {
-  const [nodes, setNodes] = useState<any[]>([]);
-  const [players, setPlayers] = useState<any[]>([]);
-  const [puzzles, setPuzzles] = useState<any[]>([]);
-  const [branch, setBranch] = useState<{
-    isGlobal: boolean;
-    position: string | null;
-  }>({
-    isGlobal: true,
-    position: null,
-  });
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    tierLevel: 1,
-    parentId: "",
-    requirements: "",
-  });
-  const [saving, setSaving] = useState(false);
+  const { show } = useToast();
+  const modules = useCached<ModuleRecord[]>("/api/modules");
+  const nodes = useCached<RawNode[]>("/api/skill-tree");
+  const players = usePlayers();
 
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
-  const [progressMap, setProgressMap] = useState<Record<string, string>>({});
+  const [activeModule, setActiveModule] = useState<string | null>(null);
+  const [position, setPosition] = useState<string>("ALL");
+  const [previewPlayer, setPreviewPlayer] = useState<string>("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [mode, setMode] = useState<Mode>({ kind: "view" });
+  const [moduleDialog, setModuleDialog] = useState<{
+    open: boolean;
+    module: ModuleRecord | null;
+  }>({ open: false, module: null });
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  async function loadNodes() {
-    const res = await fetch("/api/skill-tree");
-    setNodes(await res.json());
-  }
+  const treeUrl = useMemo(() => {
+    const q = new URLSearchParams({
+      includeUnpublished: "true",
+      includeUnassigned: "true",
+    });
+    if (position !== "ALL") q.set("position", position);
+    if (previewPlayer) q.set("playerId", previewPlayer);
+    return `/api/skill-tree/modules?${q}`;
+  }, [position, previewPlayer]);
+  const trees = useCached<{ trees: ModuleTreeDTO[] }>(treeUrl);
 
-  useEffect(() => {
-    loadNodes();
-    fetch("/api/players")
-      .then((r) => r.json())
-      .then(setPlayers);
-    fetch("/api/puzzles")
-      .then((r) => r.json())
-      .then(setPuzzles);
-  }, []);
-
-  useEffect(() => {
-    if (!selectedPlayerId) {
-      setProgressMap({});
-      return;
-    }
-    fetch(`/api/skill-tree/progress?playerId=${selectedPlayerId}`)
-      .then((r) => r.json())
-      .then(setProgressMap);
-  }, [selectedPlayerId]);
-
-  const branchNodes = nodes.filter((n) =>
-    branch.isGlobal
-      ? n.isGlobal
-      : !n.isGlobal && n.positionGroup === branch.position,
+  const moduleList = useMemo(
+    () =>
+      [...(modules.data ?? [])].sort(
+        (a, b) => a.sequenceOrder - b.sequenceOrder,
+      ),
+    [modules.data],
   );
+  const allNodes = nodes.data ?? [];
+  const unassignedCount = allNodes.filter(
+    (n) => !n.moduleId || !moduleList.some((m) => m._id === n.moduleId),
+  ).length;
 
-  const selectedNode = nodes.find((n) => n._id === selectedNodeId);
+  useEffect(() => {
+    if (activeModule) return;
+    if (moduleList.length) setActiveModule(moduleList[0]._id);
+    else if (unassignedCount) setActiveModule(UNASSIGNED);
+  }, [moduleList, unassignedCount, activeModule]);
 
-  function loadNodeIntoForm(node: any) {
-    setSelectedNodeId(node._id);
-    setForm({
-      title: node.title,
-      description: node.description ?? "",
-      tierLevel: node.tierLevel ?? 1,
-      parentId: node.parentId ?? "",
-      requirements: node.requirements ?? "",
-    });
+  const activeTree = (trees.data?.trees ?? []).find((t) =>
+    activeModule === UNASSIGNED
+      ? t.moduleId === null
+      : t.moduleId === activeModule,
+  );
+  const currentModule = moduleList.find((m) => m._id === activeModule) ?? null;
+  const selected = allNodes.find((n) => n._id === selectedId) ?? null;
+
+  function refreshAll() {
+    invalidateAdminData();
+    modules.reload();
+    nodes.reload();
+    trees.reload();
   }
 
-  function resetForm() {
-    setSelectedNodeId(null);
-    setForm({
-      title: "",
-      description: "",
-      tierLevel: 1,
-      parentId: "",
-      requirements: "",
-    });
+  function selectModule(id: string) {
+    setActiveModule(id);
+    setSelectedId(null);
+    setMode({ kind: "view" });
   }
 
-  async function handleSaveNode() {
-    setSaving(true);
-    const payload = {
-      ...form,
-      isGlobal: branch.isGlobal,
-      positionGroup: branch.position,
-      parentId: form.parentId || null,
-    };
-
-    if (selectedNodeId) {
-      await fetch(`/api/skill-tree/${selectedNodeId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    } else {
-      await fetch("/api/skill-tree", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+  async function moveModule(direction: -1 | 1) {
+    if (!currentModule) return;
+    const index = moduleList.findIndex((m) => m._id === currentModule._id);
+    const other = moduleList[index + direction];
+    if (!other) return;
+    try {
+      await Promise.all([
+        sendJson(`/api/modules/${currentModule._id}`, "PATCH", {
+          sequenceOrder: other.sequenceOrder,
+        }),
+        sendJson(`/api/modules/${other._id}`, "PATCH", {
+          sequenceOrder: currentModule.sequenceOrder,
+        }),
+      ]);
+      refreshAll();
+    } catch (err) {
+      show(errorMessage(err, "Couldn't reorder modules"));
     }
-
-    await loadNodes();
-    setSaving(false);
-    resetForm();
   }
 
-  async function handleDeleteNode() {
-    if (!selectedNodeId) return;
-    await fetch(`/api/skill-tree/${selectedNodeId}`, { method: "DELETE" });
-    await loadNodes();
-    resetForm();
+  async function deleteTopic() {
+    if (!selected) return;
+    setBusy(true);
+    try {
+      await sendJson(`/api/skill-tree/${selected._id}`, "DELETE");
+      show({
+        tone: "success",
+        title: `Deleted “${selected.title}”`,
+        detail: ["Its subtopics moved up one level."],
+      });
+      setSelectedId(null);
+      setMode({ kind: "view" });
+      setConfirmDelete(false);
+      refreshAll();
+    } catch (err) {
+      show(errorMessage(err, "Couldn't delete the topic"));
+      setConfirmDelete(false);
+    } finally {
+      setBusy(false);
+    }
   }
 
-  async function handleSetStatus(status: string) {
-    if (!selectedPlayerId || !selectedNodeId) return;
-    await fetch("/api/skill-tree/progress", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        playerId: selectedPlayerId,
-        nodeId: selectedNodeId,
-        status,
-      }),
-    });
-    setProgressMap({ ...progressMap, [selectedNodeId]: status });
-  }
-
-  const relatedPuzzles = selectedNode
-    ? puzzles.filter((p) => p.skillNodeId === selectedNode._id)
-    : [];
+  const loading = modules.loading || nodes.loading;
+  const loadError = modules.error || nodes.error;
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-12">
-      <Link
-        href="/admin"
-        className="mb-4 inline-block font-body text-sm text-sky/70 hover:text-mist"
-      >
-        ← Dashboard
-      </Link>
-
-      <h1 className="font-display text-3xl font-extrabold text-mist">
-        Skill Tree Builder
-      </h1>
-
-      {/* Branch toggle */}
-      <div className="mt-6 flex flex-wrap gap-2">
-        <button
-          onClick={() => {
-            setBranch({ isGlobal: true, position: null });
-            resetForm();
-          }}
-          className={`rounded-md px-3 py-1.5 font-body text-sm transition ${
-            branch.isGlobal
-              ? "bg-ocean text-white"
-              : "border border-sky/20 text-sky/70"
-          }`}
-        >
-          Global
-        </button>
-        {POSITIONS.map((pos) => (
+    <div className="mx-auto max-w-7xl px-6 py-12">
+      <AdminHeader
+        title="Skill Tree Builder"
+        description="Build each module's topics, set who they're for, attach lessons, and open them for players."
+        actions={
           <button
-            key={pos}
-            onClick={() => {
-              setBranch({ isGlobal: false, position: pos });
-              resetForm();
-            }}
-            className={`rounded-md px-3 py-1.5 font-body text-sm transition ${
-              !branch.isGlobal && branch.position === pos
-                ? "bg-ocean text-white"
-                : "border border-sky/20 text-sky/70"
-            }`}
+            type="button"
+            className={button.secondary}
+            onClick={() => setModuleDialog({ open: true, module: null })}
           >
-            {pos}
+            New module
+          </button>
+        }
+      />
+
+      {loadError && (
+        <p className={cx(ui.error, "mb-4")}>
+          Couldn&apos;t load the skill tree: {loadError}
+        </p>
+      )}
+
+      {/* Module tabs */}
+      <nav
+        aria-label="Modules"
+        className="mb-4 flex flex-wrap items-center gap-2"
+      >
+        {moduleList.map((m) => (
+          <button
+            key={m._id}
+            type="button"
+            onClick={() => selectModule(m._id)}
+            aria-current={activeModule === m._id ? "page" : undefined}
+            className={cx(
+              ui.chip(activeModule === m._id),
+              ui.focus,
+              "flex items-center gap-2",
+            )}
+          >
+            {m.title.ka}
+            {!m.isPublished && (
+              <span className="rounded bg-white/10 px-1.5 text-[10px] text-sky/80">
+                Draft
+              </span>
+            )}
           </button>
         ))}
-      </div>
+        {unassignedCount > 0 && (
+          <button
+            type="button"
+            onClick={() => selectModule(UNASSIGNED)}
+            aria-current={activeModule === UNASSIGNED ? "page" : undefined}
+            className={cx(ui.chip(activeModule === UNASSIGNED), ui.focus)}
+          >
+            Unassigned ({unassignedCount})
+          </button>
+        )}
+        {!loading && moduleList.length === 0 && (
+          <p className={ui.hint}>
+            No modules yet. Create your first module, e.g. Pitch Geography.
+          </p>
+        )}
+      </nav>
 
-      <div className="mt-6 grid grid-cols-2 gap-6">
-        {/* Left column: tree preview + player status + related puzzles */}
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <span className="font-body text-xs text-sky">Tree preview</span>
-            <select
-              value={selectedPlayerId}
-              onChange={(e) => setSelectedPlayerId(e.target.value)}
-              className="rounded-md border border-sky/20 bg-transparent px-2 py-1 font-body text-xs text-mist"
+      {currentModule && (
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            className={cx(button.secondary, button.small)}
+            onClick={() =>
+              setModuleDialog({ open: true, module: currentModule })
+            }
+          >
+            Edit module
+          </button>
+          <button
+            type="button"
+            className={cx(button.secondary, button.small)}
+            onClick={() => moveModule(-1)}
+            disabled={moduleList[0]?._id === currentModule._id}
+          >
+            Move left
+          </button>
+          <button
+            type="button"
+            className={cx(button.secondary, button.small)}
+            onClick={() => moveModule(1)}
+            disabled={moduleList.at(-1)?._id === currentModule._id}
+          >
+            Move right
+          </button>
+          <button
+            type="button"
+            className={cx(button.primary, button.small)}
+            onClick={() => {
+              setSelectedId(null);
+              setMode({ kind: "create", parentId: null });
+            }}
+          >
+            Add topic
+          </button>
+        </div>
+      )}
+      {activeModule === UNASSIGNED && (
+        <p className={cx(ui.hint, "mb-4")}>
+          These topics were made before modules existed. Open one, choose a
+          module for it, and save.
+        </p>
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_26rem]">
+        {/* Preview */}
+        <section aria-label="Tree preview" className="min-w-0">
+          <div className="mb-3 flex flex-wrap items-center gap-3">
+            <div
+              className="flex gap-1"
+              role="group"
+              aria-label="Preview as position"
             >
-              <option value="" className="bg-navy-950">
-                View structure only
-              </option>
-              {players.map((p) => (
-                <option key={p._id} value={p._id} className="bg-navy-950">
-                  {p.name} {p.surname}
+              {["ALL", ...POSITIONS].map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  aria-pressed={position === p}
+                  onClick={() => setPosition(p)}
+                  className={cx(
+                    ui.chip(position === p),
+                    ui.focus,
+                    "px-2.5 py-1 text-xs",
+                  )}
+                >
+                  {p === "ALL" ? "All positions" : p}
+                </button>
+              ))}
+            </div>
+            <select
+              aria-label="Preview a player's progress"
+              value={previewPlayer}
+              onChange={(e) => setPreviewPlayer(e.target.value)}
+              className={cx(ui.input, "w-auto py-1 text-xs")}
+            >
+              <option value="">No player preview</option>
+              {(players.data ?? []).map((p) => (
+                <option key={p._id} value={p._id}>
+                  #{p.number} {playerName(p)}
                 </option>
               ))}
             </select>
           </div>
 
-          <SkillTreePreview
-            nodes={branchNodes}
-            progressMap={progressMap}
-            onSelectNode={(id) => {
-              const node = branchNodes.find((n) => n._id === id);
-              if (node) loadNodeIntoForm(node);
-            }}
-            selectedNodeId={selectedNodeId}
-          />
-
-          {selectedPlayerId && selectedNode && (
-            <div className="mt-3 rounded-lg border border-sky/10 bg-white/[0.02] p-3">
-              <p className="font-body text-xs text-sky">
-                {selectedNode.title} — this player's status
-              </p>
-              <div className="mt-2 flex gap-2">
-                {STATUSES.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => handleSetStatus(s)}
-                    className={`rounded-md px-2.5 py-1 font-body text-xs transition ${
-                      progressMap[selectedNodeId!] === s
-                        ? "bg-ocean text-white"
-                        : "border border-sky/20 text-sky/70"
-                    }`}
-                  >
-                    {s.replace("_", " ")}
-                  </button>
-                ))}
-              </div>
+          {trees.loading && !trees.data ? (
+            <div
+              className={cx(card, "flex h-[520px] items-center justify-center")}
+            >
+              <p className={ui.hint}>Loading tree…</p>
             </div>
-          )}
-
-          {selectedNode && (
-            <div className="mt-3 rounded-lg border border-sky/10 bg-white/[0.02] p-3">
-              <div className="flex items-center justify-between">
-                <p className="font-body text-xs text-sky">Related Puzzles</p>
-                <Link
-                  href={`/admin/content-manager?nodeId=${selectedNode._id}`}
-                  className="font-body text-xs text-ocean hover:underline"
-                >
-                  + Add puzzle for this node
-                </Link>
-              </div>
-              <div className="mt-2 space-y-1">
-                {relatedPuzzles.map((p) => (
-                  <div key={p._id} className="font-body text-xs text-mist">
-                    {p.title}{" "}
-                    <span className="text-sky/50">· {p.xpReward} XP</span>
-                  </div>
-                ))}
-                {relatedPuzzles.length === 0 && (
-                  <p className="font-body text-xs text-sky/50">
-                    No puzzles linked yet.
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right column: node form */}
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <span className="font-body text-xs text-sky">
-              {selectedNodeId ? "Edit node" : "New node"}
-            </span>
-            {selectedNodeId && (
-              <button
-                onClick={resetForm}
-                className="font-body text-xs text-sky/60 hover:text-mist"
-              >
-                + New instead
-              </button>
-            )}
-          </div>
-
-          <div className="space-y-3 rounded-lg border border-sky/10 bg-white/[0.02] p-4">
-            <div>
-              <label className="font-body text-xs text-sky">Title</label>
-              <input
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className="mt-1 w-full border-0 border-b border-sky/25 bg-transparent pb-2 font-body text-sm text-mist outline-none focus:border-ocean"
-              />
-            </div>
-            <div>
-              <label className="font-body text-xs text-sky">Description</label>
-              <textarea
-                rows={2}
-                value={form.description}
-                onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
-                }
-                className="mt-1 w-full rounded-md border border-sky/15 bg-transparent p-2 font-body text-sm text-mist outline-none focus:border-ocean"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="font-body text-xs text-sky">Tier</label>
-                <input
-                  type="number"
-                  value={form.tierLevel}
-                  onChange={(e) =>
-                    setForm({ ...form, tierLevel: Number(e.target.value) })
-                  }
-                  className="mt-1 w-full border-0 border-b border-sky/25 bg-transparent pb-2 font-body text-sm text-mist outline-none focus:border-ocean"
-                />
-              </div>
-              <div>
-                <label className="font-body text-xs text-sky">
-                  Parent node
-                </label>
-                <select
-                  value={form.parentId}
-                  onChange={(e) =>
-                    setForm({ ...form, parentId: e.target.value })
-                  }
-                  className="mt-1 w-full border-0 border-b border-sky/25 bg-transparent pb-2 font-body text-sm text-mist outline-none focus:border-ocean"
-                >
-                  <option value="" className="bg-navy-950">
-                    None (root)
-                  </option>
-                  {branchNodes
-                    .filter((n) => n._id !== selectedNodeId)
-                    .map((n) => (
-                      <option key={n._id} value={n._id} className="bg-navy-950">
-                        {n.title}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className="font-body text-xs text-sky">
-                Unlock criteria
-              </label>
-              <input
-                value={form.requirements}
-                onChange={(e) =>
-                  setForm({ ...form, requirements: e.target.value })
-                }
-                placeholder="What does mastering this actually require?"
-                className="mt-1 w-full border-0 border-b border-sky/25 bg-transparent pb-2 font-body text-sm text-mist outline-none focus:border-ocean"
-              />
-            </div>
-
-            <div className="flex items-center gap-2 pt-2">
-              <button
-                onClick={handleSaveNode}
-                disabled={saving || !form.title}
-                className="rounded-md bg-ocean px-4 py-2 font-body text-sm font-medium text-white transition hover:bg-[#0299d1] disabled:opacity-60"
-              >
-                {saving ? "Saving…" : selectedNodeId ? "Update" : "Create"}
-              </button>
-              {selectedNodeId && (
-                <button
-                  onClick={handleDeleteNode}
-                  className="rounded-md border border-red-500/30 px-3 py-2 font-body text-xs text-red-400 hover:bg-red-500/10"
-                >
-                  Delete
-                </button>
+          ) : activeTree && activeTree.tree.children.length > 0 ? (
+            <SkillTreePreview
+              data={activeTree.tree}
+              selectedId={selectedId}
+              onSelect={(id) => {
+                setSelectedId(id);
+                setMode({ kind: "view" });
+              }}
+              showStatus={Boolean(previewPlayer)}
+            />
+          ) : (
+            <div
+              className={cx(
+                card,
+                "flex h-[520px] flex-col items-center justify-center gap-3 px-6 text-center",
               )}
+            >
+              <p className="font-body text-sm text-sky/70">
+                {position !== "ALL"
+                  ? `No topics in this module for ${position}.`
+                  : "This module has no topics yet. Add the first one to start the tree."}
+              </p>
             </div>
-          </div>
+          )}
+          <p className={cx(ui.hint, "mt-2")}>
+            Click a topic to select it. Dashed topics are shown only as context
+            for the chosen position. A small dot means the topic has a lesson.
+            {previewPlayer && " Colors show the player's status."}
+          </p>
+        </section>
+
+        {/* Side panel */}
+        <section
+          aria-label="Topic details"
+          className={cx(card, "self-start p-5")}
+        >
+          {mode.kind === "create" || mode.kind === "edit" ? (
+            <>
+              <h2 className="mb-4 font-display text-xl font-bold text-mist">
+                {mode.kind === "edit"
+                  ? "Edit topic"
+                  : mode.parentId
+                    ? "Add subtopic"
+                    : "Add topic"}
+              </h2>
+              <TopicForm
+                node={mode.kind === "edit" ? selected : null}
+                nodes={allNodes}
+                modules={moduleList}
+                defaultModuleId={
+                  activeModule === UNASSIGNED ? null : activeModule
+                }
+                defaultParentId={mode.kind === "create" ? mode.parentId : null}
+                onSaved={(saved) => {
+                  refreshAll();
+                  setSelectedId(saved._id);
+                  setMode({ kind: "view" });
+                  if (saved.moduleId && saved.moduleId !== activeModule)
+                    setActiveModule(saved.moduleId);
+                }}
+                onCancel={() => setMode({ kind: "view" })}
+              />
+            </>
+          ) : selected ? (
+            <TopicDetails
+              node={selected}
+              onEdit={() => setMode({ kind: "edit" })}
+              onAddSubtopic={() =>
+                setMode({ kind: "create", parentId: selected._id })
+              }
+              onDelete={() => setConfirmDelete(true)}
+              onProgressChanged={() => trees.reload()}
+            />
+          ) : (
+            <p className="py-10 text-center font-body text-sm text-sky/70">
+              Select a topic in the tree, or add a new one.
+            </p>
+          )}
+        </section>
+      </div>
+
+      <ModuleDialog
+        open={moduleDialog.open}
+        module={moduleDialog.module}
+        onClose={() => setModuleDialog({ open: false, module: null })}
+        onSaved={(m) => {
+          setModuleDialog({ open: false, module: null });
+          setActiveModule(m._id);
+          refreshAll();
+        }}
+        onDeleted={() => {
+          setModuleDialog({ open: false, module: null });
+          setActiveModule(null);
+          refreshAll();
+        }}
+      />
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title={`Delete “${selected?.title ?? ""}”?`}
+        message="Its subtopics move up one level and players' progress on it is removed. Topics that still have tasks or badges can't be deleted."
+        confirmLabel="Delete topic"
+        danger
+        busy={busy}
+        onConfirm={deleteTopic}
+        onCancel={() => setConfirmDelete(false)}
+      />
+    </div>
+  );
+}
+
+interface LinkedTask {
+  _id: string;
+  type: string;
+  title: string;
+  isArchived: boolean;
+}
+interface LinkedBadge {
+  _id: string;
+  title: string;
+  source: string;
+  holderCount: number;
+}
+interface ProgressRow {
+  nodeId: string;
+  status: string;
+}
+
+function TopicDetails({
+  node,
+  onEdit,
+  onAddSubtopic,
+  onDelete,
+  onProgressChanged,
+}: {
+  node: RawNode;
+  onEdit: () => void;
+  onAddSubtopic: () => void;
+  onDelete: () => void;
+  onProgressChanged: () => void;
+}) {
+  const { show } = useToast();
+  const players = usePlayers();
+  const tasks = useCached<LinkedTask[]>(`/api/tasks?skillNodeId=${node._id}`);
+  const badges = useCached<LinkedBadge[]>(
+    `/api/badges?skillNodeId=${node._id}`,
+  );
+
+  const [audience, setAudience] = useState<AudienceValue>(DEFAULT_AUDIENCE);
+  const [opening, setOpening] = useState(false);
+  const [statusPlayer, setStatusPlayer] = useState("");
+  const progress = useCached<ProgressRow[]>(
+    statusPlayer ? `/api/skill-tree/progress?playerId=${statusPlayer}` : null,
+  );
+  const currentStatus =
+    progress.data?.find((r) => String(r.nodeId) === node._id)?.status ??
+    "LOCKED";
+
+  useEffect(() => setAudience(DEFAULT_AUDIENCE), [node._id]);
+
+  async function openTopic() {
+    const api = toApiAudience(audience);
+    if (!api) return;
+    setOpening(true);
+    try {
+      const res = await sendJson<Parameters<typeof openTopicMessage>[0]>(
+        `/api/skill-tree/${node._id}/open`,
+        "POST",
+        { audience: api },
+      );
+      show(openTopicMessage(res));
+      onProgressChanged();
+      progress.reload();
+    } catch (err) {
+      show(errorMessage(err, "Couldn't open the topic"));
+    } finally {
+      setOpening(false);
+    }
+  }
+
+  async function setStatus(status: string) {
+    if (!statusPlayer) return;
+    try {
+      const res = await sendJson<{ awardedBadges: { title: string }[] }>(
+        "/api/skill-tree/progress",
+        "PATCH",
+        {
+          playerId: statusPlayer,
+          nodeId: node._id,
+          status,
+        },
+      );
+      show({
+        tone: "success",
+        title: `Set to ${PROGRESS_STATUS[status].label}`,
+        detail: res.awardedBadges.length
+          ? [
+              `Branch badges: ${res.awardedBadges.map((b) => b.title).join(", ")}.`,
+            ]
+          : [],
+      });
+      progress.reload();
+      onProgressChanged();
+    } catch (err) {
+      show(errorMessage(err, "Couldn't change the status"));
+    }
+  }
+
+  const lesson = node.lesson ?? {};
+  const hasLesson = Boolean(
+    lesson.videoUrl || lesson.diagramUrl || lesson.keyPoints?.length,
+  );
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="font-display text-xl font-bold text-mist">
+          {node.title}
+        </h2>
+        {node.titleEn && (
+          <p className="font-body text-sm text-sky/70">{node.titleEn}</p>
+        )}
+        <p className={cx(ui.hint, "mt-2")}>
+          For{" "}
+          {(node.positions?.length ? node.positions : ["ALL"])
+            .map((p) => (p === "ALL" ? "everyone" : p))
+            .join(", ")}
+          {"; "}
+          {(node.levels ?? ["U11"]).join(", ")}
+          {node.prerequisites?.length
+            ? `; ${plural(node.prerequisites.length, "prerequisite")}`
+            : ""}
+        </p>
+        {node.description && (
+          <p className="mt-3 font-body text-sm text-sky">{node.description}</p>
+        )}
+        <p className={cx(ui.hint, "mt-2")}>
+          {hasLesson
+            ? "Has a lesson."
+            : "No lesson yet. Add a video or key points so players can learn it."}
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={onEdit}
+            className={cx(button.secondary, button.small)}
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            onClick={onAddSubtopic}
+            className={cx(button.secondary, button.small)}
+          >
+            Add subtopic
+          </button>
+          <button
+            type="button"
+            onClick={onDelete}
+            className={cx(button.danger, button.small)}
+          >
+            Delete
+          </button>
         </div>
+      </div>
+
+      <div className="border-t border-sky/10 pt-5">
+        <h3 className="mb-3 font-display text-base font-bold text-mist">
+          Open for players
+        </h3>
+        <AudiencePicker
+          value={audience}
+          onChange={setAudience}
+          label="Open this topic for"
+        />
+        <button
+          type="button"
+          onClick={openTopic}
+          disabled={opening || !toApiAudience(audience)}
+          className={cx(button.primary, "mt-3 w-full")}
+        >
+          {opening ? "Opening…" : "Open topic"}
+        </button>
+      </div>
+
+      <div className="border-t border-sky/10 pt-5">
+        <h3 className="mb-3 font-display text-base font-bold text-mist">
+          Player status
+        </h3>
+        <select
+          aria-label="Player"
+          value={statusPlayer}
+          onChange={(e) => setStatusPlayer(e.target.value)}
+          className={ui.input}
+        >
+          <option value="">Choose a player</option>
+          {(players.data ?? []).map((p) => (
+            <option key={p._id} value={p._id}>
+              #{p.number} {playerName(p)}
+            </option>
+          ))}
+        </select>
+        {statusPlayer && (
+          <>
+            <p className={cx(ui.hint, "mt-2 flex items-center gap-2")}>
+              Now: <StatusPill {...PROGRESS_STATUS[currentStatus]} />
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {Object.entries(PROGRESS_STATUS).map(([key, s]) => (
+                <button
+                  key={key}
+                  type="button"
+                  disabled={key === currentStatus}
+                  onClick={() => setStatus(key)}
+                  className={cx(button.secondary, button.small)}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="border-t border-sky/10 pt-5">
+        <div className="mb-2 flex items-center justify-between">
+          <h3 className="font-display text-base font-bold text-mist">Tasks</h3>
+          <Link
+            href={`/admin/tasks/new?topic=${node._id}`}
+            className={cx(ui.textButton, ui.focus)}
+          >
+            New task
+          </Link>
+        </div>
+        {tasks.loading && <p className={ui.hint}>Loading…</p>}
+        {tasks.data?.length === 0 && (
+          <p className={ui.hint}>
+            No tasks yet. Add a puzzle or field check to test this topic.
+          </p>
+        )}
+        <ul className="space-y-1">
+          {tasks.data?.map((t) => (
+            <li key={t._id}>
+              <Link
+                href={`/admin/tasks/${t._id}`}
+                className="flex justify-between gap-2 rounded px-2 py-1.5 font-body text-sm text-mist hover:bg-white/[0.03]"
+              >
+                <span className="truncate">{t.title}</span>
+                <span className={ui.hint}>{TASK_TYPE_LABEL[t.type]}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+
+        <div className="mb-2 mt-4 flex items-center justify-between">
+          <h3 className="font-display text-base font-bold text-mist">Badges</h3>
+          <Link href="/admin/badges" className={cx(ui.textButton, ui.focus)}>
+            Manage badges
+          </Link>
+        </div>
+        {badges.data?.length === 0 && (
+          <p className={ui.hint}>No badges linked to this topic.</p>
+        )}
+        <ul className="space-y-1">
+          {badges.data?.map((b) => (
+            <li
+              key={b._id}
+              className="flex justify-between gap-2 px-2 py-1.5 font-body text-sm text-mist"
+            >
+              <span className="truncate">{b.title}</span>
+              <span className={ui.hint}>{plural(b.holderCount, "holder")}</span>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

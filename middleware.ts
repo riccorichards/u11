@@ -1,9 +1,16 @@
+// Path: middleware.ts
 import NextAuth from "next-auth";
 import authConfig from "@/auth.config";
 
 const { auth } = NextAuth(authConfig);
 
-const PLAYER_ROUTES = ["/home", "/my-dashboard", "/skill-tree", "/challenges"];
+const PLAYER_ROUTES = [
+  "/home",
+  "/my-dashboard",
+  "/skill-tree",
+  "/challenges",
+  "/badges",
+];
 
 export default auth((req) => {
   const path = req.nextUrl.pathname;
@@ -43,6 +50,7 @@ export default auth((req) => {
   }
 
   // ── Player-facing puzzle API — never admin-gated ──────────────
+  // (Old puzzle system. Remove this block in Phase 4.6 cleanup, after the migration.)
   const isPlayerPuzzleApi =
     path.startsWith("/api/puzzles/today") ||
     path.startsWith("/api/puzzles/submit") ||
@@ -55,6 +63,9 @@ export default auth((req) => {
   }
 
   // ── Admin routes & pages ──────────────────────────────────────
+  // Learning APIs (/api/tasks, /api/groups, /api/modules, /api/mastery,
+  // /api/assignments, /api/topics) check roles inside each route, because some
+  // of them are player POSTs (answering a puzzle, starting a topic).
   const isAdminRoute = path.startsWith("/admin");
   const isAdminApi =
     path.startsWith("/api/admin") ||
@@ -73,6 +84,10 @@ export default auth((req) => {
   if ((isAdminRoute || isAdminApi) && req.auth?.user?.role !== "COACH_ADMIN") {
     if (isAdminApi) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
+    // Signed-in players and parents go to their own home, not the admin login screen.
+    if (req.auth?.user) {
+      return Response.redirect(new URL("/home", req.url));
     }
     return Response.redirect(new URL("/admin/login", req.url));
   }
@@ -116,5 +131,7 @@ export const config = {
     "/skill-tree/:path*",
     "/challenges",
     "/challenges/:path*",
+    "/badges",
+    "/badges/:path*",
   ],
 };

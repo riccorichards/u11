@@ -1,77 +1,127 @@
+// Path: components/admin/SkillTreePreview.tsx
 "use client";
-import Tree from "react-d3-tree";
 
-const STATUS_COLOR: Record<string, string> = {
-  LOCKED: "#3E5878",
-  IN_PROGRESS: "#E0A72F",
-  MASTERED: "#1FA97A",
-};
+import dynamic from "next/dynamic";
+import { useEffect, useRef, useState } from "react";
+import type { CustomNodeElementProps, RawNodeDatum } from "react-d3-tree";
+import { POSITION_COLOR, PROGRESS_STATUS, Position } from "./ui";
+import type { TreeDatumDTO } from "./useAdminData";
 
-import { buildSkillTree as buildTree } from "@/lib/buildSkillTree";
+const Tree = dynamic(() => import("react-d3-tree").then((m) => m.Tree), {
+  ssr: false,
+});
 
+interface Props {
+  data: TreeDatumDTO;
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
+  /** When true, nodes are colored by the previewed player's status. */
+  showStatus: boolean;
+}
 
-export function SkillTreePreview({
-  nodes,
-  progressMap,
-  onSelectNode,
-  selectedNodeId,
-}: {
-  nodes: any[];
-  progressMap: Record<string, string>;
-  onSelectNode: (id: string) => void;
-  selectedNodeId: string | null;
-}) {
-  const treeData = { name: "Root", children: buildTree(nodes, null) };
-
-  if (nodes.length === 0) {
+function nodeColor(
+  attrs: Record<string, string | number | boolean>,
+  showStatus: boolean,
+): string {
+  if (attrs.kind === "module") return "#018ABE";
+  if (showStatus)
     return (
-      <div className="flex h-64 items-center justify-center rounded-lg border border-sky/10 bg-white/[0.02]">
-        <p className="font-body text-sm text-sky/50">
-          No nodes in this branch yet
-        </p>
-      </div>
+      PROGRESS_STATUS[String(attrs.status ?? "LOCKED")]?.color ?? "#4A5D6B"
+    );
+  const positions = String(attrs.positions ?? "ALL").split(",");
+  return positions.length === 1 && positions[0] !== "ALL"
+    ? POSITION_COLOR[positions[0] as Position]
+    : "#8FB8CC";
+}
+
+export default function SkillTreePreview({
+  data,
+  selectedId,
+  onSelect,
+  showStatus,
+}: Props) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(800);
+
+  useEffect(() => {
+    if (!wrapRef.current) return;
+    const ro = new ResizeObserver(([entry]) =>
+      setWidth(entry.contentRect.width),
+    );
+    ro.observe(wrapRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  function renderNode({ nodeDatum }: CustomNodeElementProps) {
+    const attrs = (nodeDatum.attributes ?? {}) as Record<
+      string,
+      string | number | boolean
+    >;
+    const id = String(attrs.id ?? "");
+    const isModule = attrs.kind === "module";
+    const isContext = attrs.isContext === true;
+    const selected = id === selectedId;
+    const color = nodeColor(attrs, showStatus);
+    const label =
+      nodeDatum.name.length > 26
+        ? `${nodeDatum.name.slice(0, 25)}…`
+        : nodeDatum.name;
+
+    return (
+      <g
+        onClick={() => onSelect(isModule ? null : id)}
+        style={{
+          cursor: isModule ? "default" : "pointer",
+          opacity: isContext ? 0.45 : 1,
+        }}
+        role={isModule ? undefined : "button"}
+        aria-label={isModule ? undefined : `Select ${nodeDatum.name}`}
+      >
+        {selected && (
+          <circle r={20} fill="none" stroke="#E6F1F7" strokeWidth={2} />
+        )}
+        <circle
+          r={isModule ? 16 : 13}
+          fill={isContext ? "transparent" : color}
+          stroke={color}
+          strokeWidth={2}
+          strokeDasharray={isContext ? "4 3" : undefined}
+        />
+        {attrs.hasLesson === true && (
+          <circle r={3.5} cx={10} cy={-10} fill="#E6F1F7" />
+        )}
+        <text
+          y={isModule ? -26 : 30}
+          textAnchor="middle"
+          fill="#E6F1F7"
+          stroke="none"
+          style={{
+            fontSize: isModule ? 14 : 12,
+            fontWeight: isModule ? 700 : 400,
+          }}
+        >
+          {label}
+        </text>
+      </g>
     );
   }
 
   return (
-    <div className="h-[420px] rounded-lg border border-sky/10 bg-white/[0.02]">
+    <div
+      ref={wrapRef}
+      className="h-[520px] w-full overflow-hidden rounded-lg border border-sky/10 bg-white/[0.02]"
+    >
       <Tree
-        data={treeData}
+        data={data as unknown as RawNodeDatum}
         orientation="vertical"
+        translate={{ x: width / 2, y: 60 }}
+        nodeSize={{ x: 170, y: 110 }}
+        separation={{ siblings: 1, nonSiblings: 1.15 }}
         pathFunc="step"
-        translate={{ x: 250, y: 40 }}
-        zoomable
+        pathClassFunc={() => "!stroke-sky/30"}
         collapsible={false}
-        renderCustomNodeElement={({ nodeDatum }: any) => {
-          const id = nodeDatum.attributes?.id;
-          const status = id ? progressMap[id] : undefined;
-          const fill = status ? STATUS_COLOR[status] : "#0A2540";
-          const isSelected = id === selectedNodeId;
-          const isRoot = nodeDatum.name === "Root";
-
-          if (isRoot) return <g />;
-
-          return (
-            <g
-              onClick={() => id && onSelectNode(id)}
-              style={{ cursor: "pointer" }}
-            >
-              <circle
-                r={16}
-                fill={fill}
-                stroke={isSelected ? "#018ABE" : "#97CADB33"}
-                strokeWidth={isSelected ? 3 : 1}
-              />
-              <text
-                x={22}
-                dy={4}
-                style={{ fontFamily: "DM Sans", fontSize: 12, fill: "#D6E8EE" }}
-              >
-                {nodeDatum.name}
-              </text>
-            </g>
-          );
-        }}
+        zoomable
+        renderCustomNodeElement={renderNode}
       />
     </div>
   );

@@ -47,7 +47,6 @@ const PILLAR_DESCS: Record<string, string> = {
   Mental: "სიმშვიდე, ლიდერობა, ხასიათი, სწავლის უნარი",
 };
 
-
 const BOOTSTRAP_THRESHOLD = 2;
 
 export default function PillarRadar({
@@ -116,10 +115,9 @@ export default function PillarRadar({
         <div className="flex items-start gap-2 mb-3 px-3 py-2 glass rounded-xl border border-ocean/20">
           <span className="text-sm">🌱</span>
           <p className="text-[10px] font-mono text-sky/70">
-            Still building your full picture —{" "}
-            {BOOTSTRAP_THRESHOLD - assessmentCount} more monthly check-in
-            {BOOTSTRAP_THRESHOLD - assessmentCount !== 1 ? "s" : ""} and this
-            chart gets sharper!
+            სრული სურათი ჯერ კიდევ ფორმირდება — კიდევ{" "}
+            {BOOTSTRAP_THRESHOLD - assessmentCount} თვიური შემოწმება და ეს
+            დიაგრამა უფრო ზუსტი გახდება!
           </p>
         </div>
       )}

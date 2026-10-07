@@ -1,36 +1,25 @@
+// Path: app/api/skill-tree/[id]/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import SkillNode from "@/lib/models/SkillNode";
-import SkillNodeProgress from "@/lib/models/SkillNodeProgress";
+import { getViewer, unauthorized, forbidden } from "@/lib/learning/guard";
+import { errorResponse, readJson, toObjectId } from "@/lib/learning/errors";
+import { deleteNode, updateNode } from "@/lib/learning/nodes";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } },
 ) {
+  const viewer = await getViewer();
+  if (!viewer) return unauthorized();
+  if (!viewer.isCoach) return forbidden();
   try {
-    const body = await req.json();
+    const id = toObjectId(params.id, "topic id");
+    const body = await readJson(req);
     await connectDB();
-    const node = await SkillNode.findByIdAndUpdate(
-      params.id,
-      {
-        title: body.title,
-        description: body.description,
-        isGlobal: body.isGlobal,
-        positionGroup: body.isGlobal ? null : body.positionGroup,
-        tierLevel: body.tierLevel,
-        parentId: body.parentId || null,
-        requirements: body.requirements,
-      },
-      { new: true },
-    );
-    if (!node)
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    return NextResponse.json(node);
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to update node" },
-      { status: 500 },
-    );
+    return NextResponse.json(await updateNode(id, body));
+  } catch (err) {
+    return errorResponse(err, "Failed to update topic");
   }
 }
 
@@ -38,26 +27,15 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: { id: string } },
 ) {
+  const viewer = await getViewer();
+  if (!viewer) return unauthorized();
+  if (!viewer.isCoach) return forbidden();
   try {
+    const id = toObjectId(params.id, "topic id");
     await connectDB();
-    // Re-parent any children up to this node's own parent, rather than
-    // orphaning them or cascading the delete through the whole branch.
-    const node = await SkillNode.findById(params.id);
-    if (!node)
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-    await SkillNode.updateMany(
-      { parentId: params.id },
-      { parentId: node.parentId ?? null },
-    );
-    await SkillNode.findByIdAndDelete(params.id);
-    await SkillNodeProgress.deleteMany({ nodeId: params.id });
-
+    await deleteNode(id);
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to delete node" },
-      { status: 500 },
-    );
+  } catch (err) {
+    return errorResponse(err, "Failed to delete topic");
   }
 }
