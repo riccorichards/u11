@@ -1,13 +1,15 @@
-async function getTeamData() {
-  const res = await fetch(
-    `${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}/api/team`,
-    { cache: "no-store" },
-  );
-  return res.json();
-}
+// Path: components/player/TeamMetadataCard.tsx
+import { serverFetch } from "@/lib/serverFetch";
 
 export async function TeamMetadataCard() {
-  const data = await getTeamData();
+  let data;
+  try {
+    data = await serverFetch<any>("/api/team");
+  } catch (err) {
+    // Team stats are a bonus card: if they fail, the rest of /home still loads.
+    console.error("TeamMetadataCard:", err);
+    return null;
+  }
   const s = data.stats;
 
   const statBoxes = [

@@ -41,14 +41,13 @@
       "static/chunks/231-db6a56379b6053dc.js",
       "static/chunks/app/tactics/page-300601f2d03a6356.js"
     ],
-    "/(player)/challenges/page": [
+    "/(player)/badges/page": [
       "static/chunks/webpack-6b7d140caaf512b0.js",
       "static/chunks/fd9d1056-2dde4555689acf06.js",
       "static/chunks/7023-e745bb853db06bbd.js",
       "static/chunks/main-app-fa889ab2b32d16b8.js",
       "static/chunks/231-db6a56379b6053dc.js",
-      "static/chunks/773-1c1c6f9d9ac084d3.js",
-      "static/chunks/app/(player)/challenges/page-4513d6927404a061.js"
+      "static/chunks/app/(player)/badges/page-c0f8bbce085e0d8b.js"
     ],
     "/(player)/layout": [
       "static/chunks/webpack-6b7d140caaf512b0.js",
@@ -58,6 +57,41 @@
       "static/chunks/231-db6a56379b6053dc.js",
       "static/chunks/app/(player)/layout-cc31668c17ea43c6.js"
     ],
+    "/(player)/my-dashboard/page": [
+      "static/chunks/webpack-6b7d140caaf512b0.js",
+      "static/chunks/fd9d1056-2dde4555689acf06.js",
+      "static/chunks/7023-e745bb853db06bbd.js",
+      "static/chunks/main-app-fa889ab2b32d16b8.js",
+      "static/chunks/4340-68dd122e96652275.js",
+      "static/chunks/9362-2a79ca545dde82f2.js",
+      "static/chunks/app/(player)/my-dashboard/page-d1d2c33cbfb72da2.js"
+    ],
+    "/(player)/skill-tree/[id]/page": [
+      "static/chunks/webpack-6b7d140caaf512b0.js",
+      "static/chunks/fd9d1056-2dde4555689acf06.js",
+      "static/chunks/7023-e745bb853db06bbd.js",
+      "static/chunks/main-app-fa889ab2b32d16b8.js",
+      "static/chunks/231-db6a56379b6053dc.js",
+      "static/chunks/773-1c1c6f9d9ac084d3.js",
+      "static/chunks/app/(player)/skill-tree/[id]/page-6b49dbef23ec1cce.js"
+    ],
+    "/(player)/challenges/page": [
+      "static/chunks/webpack-6b7d140caaf512b0.js",
+      "static/chunks/fd9d1056-2dde4555689acf06.js",
+      "static/chunks/7023-e745bb853db06bbd.js",
+      "static/chunks/main-app-fa889ab2b32d16b8.js",
+      "static/chunks/231-db6a56379b6053dc.js",
+      "static/chunks/773-1c1c6f9d9ac084d3.js",
+      "static/chunks/app/(player)/challenges/page-4513d6927404a061.js"
+    ],
+    "/(player)/skill-tree/page": [
+      "static/chunks/webpack-6b7d140caaf512b0.js",
+      "static/chunks/fd9d1056-2dde4555689acf06.js",
+      "static/chunks/7023-e745bb853db06bbd.js",
+      "static/chunks/main-app-fa889ab2b32d16b8.js",
+      "static/chunks/231-db6a56379b6053dc.js",
+      "static/chunks/app/(player)/skill-tree/page-0a70cb2417976991.js"
+    ],
     "/(player)/home/page": [
       "static/chunks/webpack-6b7d140caaf512b0.js",
       "static/chunks/fd9d1056-2dde4555689acf06.js",
@@ -65,14 +99,13 @@
       "static/chunks/main-app-fa889ab2b32d16b8.js",
       "static/chunks/app/(player)/home/page-ba9b7210ff6b114b.js"
     ],
-    "/admin/badges/page": [
+    "/admin/assessments/page": [
       "static/chunks/webpack-6b7d140caaf512b0.js",
       "static/chunks/fd9d1056-2dde4555689acf06.js",
       "static/chunks/7023-e745bb853db06bbd.js",
       "static/chunks/main-app-fa889ab2b32d16b8.js",
       "static/chunks/231-db6a56379b6053dc.js",
-      "static/chunks/3248-4bb5f4734606bbcc.js",
-      "static/chunks/app/admin/badges/page-b38aa06bfe27d729.js"
+      "static/chunks/app/admin/assessments/page-0eba363da236201f.js"
     ],
     "/admin/layout": [
       "static/chunks/webpack-6b7d140caaf512b0.js",
@@ -89,29 +122,14 @@
       "static/chunks/231-db6a56379b6053dc.js",
       "static/chunks/app/admin/content-manager/page-9b2066a2d21a035f.js"
     ],
-    "/admin/assessments/page": [
+    "/admin/badges/page": [
       "static/chunks/webpack-6b7d140caaf512b0.js",
       "static/chunks/fd9d1056-2dde4555689acf06.js",
       "static/chunks/7023-e745bb853db06bbd.js",
       "static/chunks/main-app-fa889ab2b32d16b8.js",
       "static/chunks/231-db6a56379b6053dc.js",
-      "static/chunks/app/admin/assessments/page-0eba363da236201f.js"
-    ],
-    "/(player)/badges/page": [
-      "static/chunks/webpack-6b7d140caaf512b0.js",
-      "static/chunks/fd9d1056-2dde4555689acf06.js",
-      "static/chunks/7023-e745bb853db06bbd.js",
-      "static/chunks/main-app-fa889ab2b32d16b8.js",
-      "static/chunks/231-db6a56379b6053dc.js",
-      "static/chunks/app/(player)/badges/page-c0f8bbce085e0d8b.js"
-    ],
-    "/admin/leaderboard/page": [
-      "static/chunks/webpack-6b7d140caaf512b0.js",
-      "static/chunks/fd9d1056-2dde4555689acf06.js",
-      "static/chunks/7023-e745bb853db06bbd.js",
-      "static/chunks/main-app-fa889ab2b32d16b8.js",
-      "static/chunks/231-db6a56379b6053dc.js",
-      "static/chunks/app/admin/leaderboard/page-7f006277b5561a1e.js"
+      "static/chunks/3248-4bb5f4734606bbcc.js",
+      "static/chunks/app/admin/badges/page-b38aa06bfe27d729.js"
     ],
     "/admin/grading/page": [
       "static/chunks/webpack-6b7d140caaf512b0.js",
@@ -121,14 +139,13 @@
       "static/chunks/231-db6a56379b6053dc.js",
       "static/chunks/app/admin/grading/page-1efe0f79d765d595.js"
     ],
-    "/admin/groups/page": [
+    "/admin/leaderboard/page": [
       "static/chunks/webpack-6b7d140caaf512b0.js",
       "static/chunks/fd9d1056-2dde4555689acf06.js",
       "static/chunks/7023-e745bb853db06bbd.js",
       "static/chunks/main-app-fa889ab2b32d16b8.js",
       "static/chunks/231-db6a56379b6053dc.js",
-      "static/chunks/3248-4bb5f4734606bbcc.js",
-      "static/chunks/app/admin/groups/page-f6057eb4a29ca9ed.js"
+      "static/chunks/app/admin/leaderboard/page-7f006277b5561a1e.js"
     ],
     "/admin/login/page": [
       "static/chunks/webpack-6b7d140caaf512b0.js",
@@ -138,39 +155,14 @@
       "static/chunks/9353-50942d3b5c5b0778.js",
       "static/chunks/app/admin/login/page-5fbd2491eeb7d39a.js"
     ],
-    "/(player)/my-dashboard/page": [
-      "static/chunks/webpack-6b7d140caaf512b0.js",
-      "static/chunks/fd9d1056-2dde4555689acf06.js",
-      "static/chunks/7023-e745bb853db06bbd.js",
-      "static/chunks/main-app-fa889ab2b32d16b8.js",
-      "static/chunks/4340-68dd122e96652275.js",
-      "static/chunks/9362-2a79ca545dde82f2.js",
-      "static/chunks/app/(player)/my-dashboard/page-d1d2c33cbfb72da2.js"
-    ],
-    "/(player)/skill-tree/page": [
+    "/admin/groups/page": [
       "static/chunks/webpack-6b7d140caaf512b0.js",
       "static/chunks/fd9d1056-2dde4555689acf06.js",
       "static/chunks/7023-e745bb853db06bbd.js",
       "static/chunks/main-app-fa889ab2b32d16b8.js",
       "static/chunks/231-db6a56379b6053dc.js",
-      "static/chunks/app/(player)/skill-tree/page-0a70cb2417976991.js"
-    ],
-    "/admin/page": [
-      "static/chunks/webpack-6b7d140caaf512b0.js",
-      "static/chunks/fd9d1056-2dde4555689acf06.js",
-      "static/chunks/7023-e745bb853db06bbd.js",
-      "static/chunks/main-app-fa889ab2b32d16b8.js",
-      "static/chunks/231-db6a56379b6053dc.js",
-      "static/chunks/app/admin/page-b8ba2768f477dc95.js"
-    ],
-    "/(player)/skill-tree/[id]/page": [
-      "static/chunks/webpack-6b7d140caaf512b0.js",
-      "static/chunks/fd9d1056-2dde4555689acf06.js",
-      "static/chunks/7023-e745bb853db06bbd.js",
-      "static/chunks/main-app-fa889ab2b32d16b8.js",
-      "static/chunks/231-db6a56379b6053dc.js",
-      "static/chunks/773-1c1c6f9d9ac084d3.js",
-      "static/chunks/app/(player)/skill-tree/[id]/page-6b49dbef23ec1cce.js"
+      "static/chunks/3248-4bb5f4734606bbcc.js",
+      "static/chunks/app/admin/groups/page-f6057eb4a29ca9ed.js"
     ],
     "/admin/players/[id]/page": [
       "static/chunks/webpack-6b7d140caaf512b0.js",
@@ -188,6 +180,22 @@
       "static/chunks/231-db6a56379b6053dc.js",
       "static/chunks/app/admin/matches/page-4994db2bd452ef59.js"
     ],
+    "/admin/page": [
+      "static/chunks/webpack-6b7d140caaf512b0.js",
+      "static/chunks/fd9d1056-2dde4555689acf06.js",
+      "static/chunks/7023-e745bb853db06bbd.js",
+      "static/chunks/main-app-fa889ab2b32d16b8.js",
+      "static/chunks/231-db6a56379b6053dc.js",
+      "static/chunks/app/admin/page-b8ba2768f477dc95.js"
+    ],
+    "/admin/players/page": [
+      "static/chunks/webpack-6b7d140caaf512b0.js",
+      "static/chunks/fd9d1056-2dde4555689acf06.js",
+      "static/chunks/7023-e745bb853db06bbd.js",
+      "static/chunks/main-app-fa889ab2b32d16b8.js",
+      "static/chunks/231-db6a56379b6053dc.js",
+      "static/chunks/app/admin/players/page-4501772feb1f05c1.js"
+    ],
     "/admin/players/[id]/view/page": [
       "static/chunks/webpack-6b7d140caaf512b0.js",
       "static/chunks/fd9d1056-2dde4555689acf06.js",
@@ -199,14 +207,6 @@
       "static/chunks/9362-2a79ca545dde82f2.js",
       "static/chunks/app/admin/players/[id]/view/page-b21a0bbf4541905a.js"
     ],
-    "/admin/players/page": [
-      "static/chunks/webpack-6b7d140caaf512b0.js",
-      "static/chunks/fd9d1056-2dde4555689acf06.js",
-      "static/chunks/7023-e745bb853db06bbd.js",
-      "static/chunks/main-app-fa889ab2b32d16b8.js",
-      "static/chunks/231-db6a56379b6053dc.js",
-      "static/chunks/app/admin/players/page-4501772feb1f05c1.js"
-    ],
     "/admin/skill-tree-builder/page": [
       "static/chunks/webpack-6b7d140caaf512b0.js",
       "static/chunks/fd9d1056-2dde4555689acf06.js",
@@ -216,6 +216,14 @@
       "static/chunks/3248-4bb5f4734606bbcc.js",
       "static/chunks/9412-50ff3e71ac0f3fc4.js",
       "static/chunks/app/admin/skill-tree-builder/page-bf10f40bd0ba27c4.js"
+    ],
+    "/admin/tasks/page": [
+      "static/chunks/webpack-6b7d140caaf512b0.js",
+      "static/chunks/fd9d1056-2dde4555689acf06.js",
+      "static/chunks/7023-e745bb853db06bbd.js",
+      "static/chunks/main-app-fa889ab2b32d16b8.js",
+      "static/chunks/231-db6a56379b6053dc.js",
+      "static/chunks/app/admin/tasks/page-52ac12cd0938a825.js"
     ],
     "/admin/tasks/[id]/page": [
       "static/chunks/webpack-6b7d140caaf512b0.js",
@@ -228,14 +236,6 @@
       "static/chunks/9303-9ae319ab63b12d8a.js",
       "static/chunks/app/admin/tasks/[id]/page-412f12563142f827.js"
     ],
-    "/admin/tournaments/[id]/page": [
-      "static/chunks/webpack-6b7d140caaf512b0.js",
-      "static/chunks/fd9d1056-2dde4555689acf06.js",
-      "static/chunks/7023-e745bb853db06bbd.js",
-      "static/chunks/main-app-fa889ab2b32d16b8.js",
-      "static/chunks/231-db6a56379b6053dc.js",
-      "static/chunks/app/admin/tournaments/[id]/page-2cb6b54a72fd81d3.js"
-    ],
     "/admin/tasks/new/page": [
       "static/chunks/webpack-6b7d140caaf512b0.js",
       "static/chunks/fd9d1056-2dde4555689acf06.js",
@@ -247,13 +247,13 @@
       "static/chunks/9303-9ae319ab63b12d8a.js",
       "static/chunks/app/admin/tasks/new/page-858a4ec24ab6de99.js"
     ],
-    "/admin/tasks/page": [
+    "/admin/tournaments/[id]/page": [
       "static/chunks/webpack-6b7d140caaf512b0.js",
       "static/chunks/fd9d1056-2dde4555689acf06.js",
       "static/chunks/7023-e745bb853db06bbd.js",
       "static/chunks/main-app-fa889ab2b32d16b8.js",
       "static/chunks/231-db6a56379b6053dc.js",
-      "static/chunks/app/admin/tasks/page-52ac12cd0938a825.js"
+      "static/chunks/app/admin/tournaments/[id]/page-2cb6b54a72fd81d3.js"
     ],
     "/admin/tournaments/page": [
       "static/chunks/webpack-6b7d140caaf512b0.js",
